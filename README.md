@@ -21,8 +21,7 @@ npm install
 npx expo start
 ```
 
-Escaneie o QR code com o app **Expo Go** no celular para carregar o projeto.
-
+Escaneie o QR code com o app **Expo Go** no celular para carregar o projeto
 ## Estrutura
 
 ```
@@ -37,6 +36,7 @@ proj-clinica-aura/
 
 ## Squad
 
-- [nome do integrante 1]
-- [nome do integrante 2]
-- [nome do integrante 3]
+- [Luiz Egito]
+- [Pedro Basso]
+
+.
