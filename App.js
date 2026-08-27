@@ -1,35 +1,39 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import Menu from './src/screens/Menu/Menu';
+import Medico from './src/screens/Medico/Medico';
+import CadastroEdicaoMedicoScreen from './src/screens/Medico/CadastroEdicaoMedicoScreen';
+import Paciente from './src/screens/Paciente/Paciente';
+import CadastroEdicaoPacienteScreen from './src/screens/Paciente/CadastroEdicaoPacienteScreen';
+import { cores } from './src/theme';
+
+const Stack = createNativeStackNavigator();
 
 // Componente raiz do projeto da squad.
-// Sistema de agendamento de consultas para clínica médica.
-// A partir daqui serão adicionadas as telas de Login,
-// Cadastro de Paciente e Cadastro de Médico (navegação com
-// React Navigation nas próximas aulas).
+// A partir da Aula 3 nenhuma lista sai daqui por prop: cada tela
+// busca os proprios dados na API RESTful da clinica.
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Clínica App</Text>
-      <Text style={styles.subtitle}>Projeto Expo inicializado — Aula 1</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <StatusBar style="light" />
+      <Stack.Navigator
+        initialRouteName="Menu"
+        screenOptions={{
+          headerStyle: { backgroundColor: cores.primaria },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: { fontWeight: '600' },
+          contentStyle: { backgroundColor: cores.fundo },
+        }}
+      >
+        <Stack.Screen name="Menu" component={Menu} options={{ headerShown: false }} />
+        <Stack.Screen name="Medicos" component={Medico} options={{ title: 'Médicos' }} />
+        <Stack.Screen name="CadastroEdicaoMedico" component={CadastroEdicaoMedicoScreen} />
+        <Stack.Screen name="Pacientes" component={Paciente} options={{ title: 'Pacientes' }} />
+        <Stack.Screen name="CadastroEdicaoPaciente" component={CadastroEdicaoPacienteScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-});
