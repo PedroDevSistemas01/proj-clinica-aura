@@ -11,6 +11,8 @@ export const cores = {
   erro: '#B3261E',
   erroClaro: '#FBE9E7',
   sucesso: '#2E7D32',
+  aviso: '#7A4F01', // aviso não bloqueante (ex.: serviço externo fora do ar)
+  avisoClaro: '#FFF4DB',
 };
 
 export const espaco = {
