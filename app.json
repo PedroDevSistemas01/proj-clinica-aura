@@ -25,6 +25,27 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "A Clínica Aura usa a câmera só para tirar a foto de perfil de médicos e pacientes.",
+          "photosPermission": "A Clínica Aura acessa suas fotos só quando você escolhe uma imagem para a foto de perfil."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "A Clínica Aura usa o Face ID para destrancar a sua sessão neste aparelho. O seu rosto nunca sai do aparelho."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "A Clínica Aura usa sua localização só enquanto a tela Como chegar está aberta, para calcular a distância até a clínica. Ela não é enviada a ninguém."
+        }
+      ]
+    ]
   }
 }
