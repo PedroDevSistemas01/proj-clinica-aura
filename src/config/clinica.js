@@ -12,4 +12,12 @@ export const CLINICA = {
     cidade: 'São Carlos',
     uf: 'SP',
   },
+  // PENDÊNCIA CONSCIENTE (Aula 6): coordenadas escritas no código, obtidas uma
+  // vez pelo Nominatim (ADR 002). A tela "Como chegar" prefere as do cache de
+  // geocoding, quando existem; estas são o valor de reserva. Na Aula 12 viram
+  // o marcador do mapa. Se o endereço acima mudar, atualize aqui também.
+  coordenadas: {
+    latitude: -22.0164652,
+    longitude: -47.8924433,
+  },
 };

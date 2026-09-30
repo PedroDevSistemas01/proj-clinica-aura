@@ -12,6 +12,7 @@ import CadastroEdicaoMedicoScreen from './src/screens/Medico/CadastroEdicaoMedic
 import Paciente from './src/screens/Paciente/Paciente';
 import CadastroEdicaoPacienteScreen from './src/screens/Paciente/CadastroEdicaoPacienteScreen';
 import SobreClinica from './src/screens/Sobre/SobreClinica';
+import ComoChegar from './src/screens/Clinica/ComoChegar';
 import { estaLogado } from './src/services/sessao';
 import { cores } from './src/theme';
 
@@ -60,6 +61,7 @@ export default function App() {
         <Stack.Screen name="Pacientes" component={Paciente} options={{ title: 'Pacientes' }} />
         <Stack.Screen name="CadastroEdicaoPaciente" component={CadastroEdicaoPacienteScreen} />
         <Stack.Screen name="SobreClinica" component={SobreClinica} options={{ title: 'Sobre a clínica' }} />
+        <Stack.Screen name="ComoChegar" component={ComoChegar} options={{ title: 'Como chegar' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

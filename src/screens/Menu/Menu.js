@@ -18,6 +18,11 @@ const OPCOES = [
     descricao: 'Listar, cadastrar, editar e excluir pacientes',
   },
   {
+    rota: 'ComoChegar',
+    titulo: 'Como chegar',
+    descricao: 'Distância e tempo estimado até a clínica',
+  },
+  {
     rota: 'SobreClinica',
     titulo: 'Sobre a clínica',
     descricao: 'Endereço, telefone e localização da clínica',
