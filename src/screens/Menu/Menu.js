@@ -17,6 +17,11 @@ const OPCOES = [
     titulo: 'Pacientes',
     descricao: 'Listar, cadastrar, editar e excluir pacientes',
   },
+  {
+    rota: 'SobreClinica',
+    titulo: 'Sobre a clínica',
+    descricao: 'Endereço, telefone e localização da clínica',
+  },
 ];
 
 export default function Menu({ navigation }) {
