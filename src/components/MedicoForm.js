@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,6 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 
 import { cores, espaco } from '../theme';
+import FotoPerfil from './FotoPerfil';
 
 const CAMPOS = [
   { chave: 'nome', rotulo: 'Nome completo', placeholder: 'Ana Beatriz Souza' },
@@ -32,16 +33,31 @@ const CAMPOS = [
   },
 ];
 
-export default function MedicoForm({ medico, onSave }) {
-  const navigation = useNavigation();
-
-  const [formData, setFormData] = useState({
+function dadosIniciais(medico) {
+  return {
     nome: medico?.nome ?? '',
     crm: medico?.crm ?? '',
     especialidade: medico?.especialidade ?? '',
     telefone: medico?.telefone ?? '',
     email: medico?.email ?? '',
-  });
+  };
+}
+
+export default function MedicoForm({ medico, onSave }) {
+  const navigation = useNavigation();
+
+  const [formData, setFormData] = useState(() => dadosIniciais(medico));
+
+  // Aula 6, Passo 2 — URI da foto de perfil. No modo edição começa com a foto
+  // que o médico já tem; no cadastro, sem foto (ela é opcional).
+  const [fotoUri, setFotoUri] = useState(medico?.fotoUri || null);
+
+  // Se a tela receber outro médico, formulário E foto acompanham. Sem isso, a
+  // foto do médico anterior ficaria na tela (Passo 2, item 10).
+  useEffect(() => {
+    setFormData(dadosIniciais(medico));
+    setFotoUri(medico?.fotoUri || null);
+  }, [medico]);
 
   // Passo 4, item 13 — trava o botão enquanto a requisição está em curso.
   const [salvando, setSalvando] = useState(false);
@@ -61,7 +77,8 @@ export default function MedicoForm({ medico, onSave }) {
 
       // O await é o ponto central do passo: só seguimos adiante
       // depois que o servidor confirmar a gravação.
-      await onSave(formData);
+      // fotoUri viaja junto com o restante dos dados (Passo 2, item 9).
+      await onSave({ ...formData, fotoUri });
 
       Alert.alert(
         'Tudo certo',
@@ -81,6 +98,13 @@ export default function MedicoForm({ medico, onSave }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
+        <FotoPerfil
+          uri={fotoUri}
+          nome={formData.nome}
+          onChange={setFotoUri}
+          desabilitado={salvando}
+        />
+
         {CAMPOS.map((campo) => (
           <View key={campo.chave} style={styles.grupo}>
             <Text style={styles.rotulo}>{campo.rotulo}</Text>

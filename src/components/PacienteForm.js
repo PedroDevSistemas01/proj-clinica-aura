@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import { cores, espaco } from '../theme';
 import { cepValido, consultarCep, somenteDigitosCep } from '../services/viacep';
+import FotoPerfil from './FotoPerfil';
 
 const CAMPOS = [
   { chave: 'nome', rotulo: 'Nome completo', placeholder: 'Helena Ribeiro' },
@@ -74,6 +75,14 @@ export default function PacienteForm({ paciente, onSave }) {
     cidade: paciente?.cidade ?? '',
     uf: paciente?.uf ?? '',
   });
+
+  // Foto de perfil (Aula 6): o mesmo componente do cadastro de médico.
+  const [fotoUri, setFotoUri] = useState(paciente?.fotoUri || null);
+
+  // Outro paciente na tela -> a foto acompanha (senão fica a do anterior).
+  useEffect(() => {
+    setFotoUri(paciente?.fotoUri || null);
+  }, [paciente]);
 
   const [salvando, setSalvando] = useState(false);
 
@@ -145,7 +154,8 @@ export default function PacienteForm({ paciente, onSave }) {
 
     try {
       setSalvando(true);
-      await onSave(formData);
+      // A foto (Aula 6) viaja junto com o restante dos dados.
+      await onSave({ ...formData, fotoUri });
 
       Alert.alert(
         'Tudo certo',
@@ -188,6 +198,13 @@ export default function PacienteForm({ paciente, onSave }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
+        <FotoPerfil
+          uri={fotoUri}
+          nome={formData.nome}
+          onChange={setFotoUri}
+          desabilitado={salvando}
+        />
+
         {CAMPOS.map(renderizarCampo)}
 
         <Text style={styles.secao}>Endereço</Text>
