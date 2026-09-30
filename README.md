@@ -15,6 +15,8 @@ Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 - React Native + Expo (SDK 51)
 - React Navigation (native-stack)
 - expo-secure-store (cofre do SO para guardar o token de sessão)
+- @react-native-async-storage/async-storage (cache local de dados não sensíveis, ex.: coordenadas da clínica)
+- Serviços externos (Aula 5): ViaCEP (CEP) e Nominatim/OpenStreetMap (geocoding), sem chave
 - json-server como API mock de dados (porta 3000)
 - API de autenticação em Node puro (porta 3001), em `servidor/auth-api.js`
 
@@ -45,6 +47,7 @@ Usuários de teste: `recepcao@clinica.com / clinica123` e `joao@clinica.com / me
 ```bash
 npm install
 npx expo install expo-secure-store   # garante a versão compatível com o SDK
+npx expo install @react-native-async-storage/async-storage   # Aula 5: cache local
 npx expo start
 ```
 
@@ -96,6 +99,42 @@ Descubra seu IP com `ipconfig` (Windows) ou `ifconfig` (Linux/macOS). O celular 
 - **Senha:** não fica guardada em lugar nenhum depois do login — o `LoginScreen` limpa o campo (`setSenha('')`). O app precisa do token, não da senha.
 - **Logs:** nenhum `console.log` imprime token, senha ou dado de paciente.
 
+## O que a Aula 5 entregou — Web Services de terceiros
+
+A partir daqui o app também fala com servidores que **não são nossos**. Por isso
+existem dois clientes HTTP separados, de propósito:
+
+| Cliente | Fala com | Envia o token da clínica? |
+| --- | --- | --- |
+| `src/services/api.js` | a nossa API (json-server / API real) | Sim |
+| `src/services/httpExterno.js` | ViaCEP, Nominatim e futuros terceiros | **Nunca** (seria vazar credencial) |
+
+| Passo | Onde | O quê |
+| --- | --- | --- |
+| 1 | `docs/decisoes/000-mapa-dependencias-externas.md` | Mapa de tudo que depende de terceiros (CEP, geocoding, mapas, push, SMS), com opções e o que acontece se cada serviço cair |
+| 2 | `docs/decisoes/001` a `005` | Um ADR por serviço: contexto, opções, decisão, consequências, plano B e sinais de que deu errado |
+| 3 | `src/services/httpExterno.js` | `buscarExterno(nomeServico, url, opcoes)`: timeout de 8 s com `AbortController` ("tempo esgotado" em vez de `AbortError`), header `User-Agent`, `resposta.ok` conferido antes do `.json()`, 429 com mensagem própria, erro `ServicoExternoIndisponivel` com o nome do serviço |
+| 4A | `src/services/viacep.js` + `PacienteForm.js` | CEP no cadastro do paciente: validação local de 8 dígitos, consulta no `onBlur` (não a cada tecla), trata `200 + erro:"true"`, tradução `localidade → cidade`, indicador durante a consulta, **aviso** (não erro) se falhar, campos sempre editáveis |
+| 4B | `src/services/geocoding.js` + `localizacaoClinica.js` + `screens/Sobre/SobreClinica.js` | Coordenadas da clínica pelo Nominatim: `User-Agent`, 1 req/s garantido por fila (sem `Promise.all`), lista vazia tratada, cache em AsyncStorage, crédito visível ao OpenStreetMap, botão "Abrir no app de mapas" como plano B |
+| 5 | `.env.example` / `.gitignore` | Nenhuma chave no código. `.env` fora do Git; `.env.example` versionado sem valores |
+
+### Como testar (precisa de internet)
+
+1. **Pacientes → + → campo CEP:** digite `13560-042` e toque fora do campo. Logradouro, bairro, cidade e UF são preenchidos e continuam editáveis.
+2. `99999999` → aviso "CEP não encontrado", cadastro continua possível.
+3. Desligue o Wi-Fi e repita → aviso de "Sem conexão com ViaCEP", cadastro continua possível.
+4. **Menu → Sobre a clínica:** latitude/longitude aparecem ("Consultado agora"). Feche e abra de novo: "Guardado neste aparelho", sem nova chamada ao Nominatim.
+5. Para ver o timeout: troque `TIMEOUT_MS` em `httpExterno.js` para `1` e recarregue. Volte para `8000`.
+
+> A consulta de CEP e o geocoding usam HTTPS e não dependem do json-server:
+> funcionam mesmo com os Terminais 1 e 2 desligados.
+
+### Providências para as próximas aulas (ver ADRs)
+
+- [ ] **Aula 7/9:** aparelho Android para *development build* (push não funciona no Expo Go no Android a partir do SDK 53) + conta Expo/EAS + projeto Firebase (ADR 004).
+- [ ] **Aula 12 (22/10):** conta Google Cloud com faturamento, chave do Maps SDK for Android restrita ao pacote do app, no `.env` (ADR 003).
+- [ ] **Aula 13:** aparelho com chip para testar `expo-sms`; comparar plano de teste Zenvia × Twilio caso a clínica queira confirmação automática (ADR 005).
+
 ## Estrutura
 
 ```
@@ -104,15 +143,23 @@ proj-clinica-aura/
 ├── index.js              -> registra o App.js como ponto de entrada
 ├── app.json              -> configurações do app (nome, ícone, splash)
 ├── db_clinica.json       -> base do json-server (API mock de dados)
+├── .env.example          -> modelo de chaves de serviços externos (o .env fica fora do Git)
+├── docs/decisoes/        -> registros de decisão arquitetural (ADR) dos serviços externos
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
 │   └── auth-api.js       -> API de autenticação (Node puro, porta 3001)
 └── src/
     ├── theme.js          -> cores e espaçamentos compartilhados
+    ├── config/
+    │   └── clinica.js    -> dados institucionais (endereço usado no geocoding)
     ├── services/
     │   ├── sessao.js     -> cofre do token (expo-secure-store)
-    │   └── api.js        -> cliente HTTP único (token + tratamento de 401)
+    │   ├── api.js        -> cliente HTTP da NOSSA API (token + tratamento de 401)
+    │   ├── httpExterno.js -> cliente HTTP de TERCEIROS (timeout, User-Agent, 429, sem token)
+    │   ├── viacep.js     -> consultarCep()
+    │   ├── geocoding.js  -> geocodificar() no Nominatim (1 req/s)
+    │   └── localizacaoClinica.js -> coordenadas da clínica com cache
     ├── components/
     │   ├── MedicoForm.js
     │   └── PacienteForm.js
@@ -122,9 +169,10 @@ proj-clinica-aura/
         ├── Medico/
         │   ├── Medico.js
         │   └── CadastroEdicaoMedicoScreen.js
-        └── Paciente/
-            ├── Paciente.js
-            └── CadastroEdicaoPacienteScreen.js
+        ├── Paciente/
+        │   ├── Paciente.js
+        │   └── CadastroEdicaoPacienteScreen.js
+        └── Sobre/SobreClinica.js
 ```
 
 ## Squad
