@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from './src/screens/Login/LoginScreen';
+import LoginBiometrico from './src/screens/Login/LoginBiometrico';
 import Menu from './src/screens/Menu/Menu';
 import Medico from './src/screens/Medico/Medico';
 import CadastroEdicaoMedicoScreen from './src/screens/Medico/CadastroEdicaoMedicoScreen';
@@ -41,8 +42,9 @@ export default function App() {
     <NavigationContainer>
       <StatusBar style="light" />
       <Stack.Navigator
-        // Quem tem sessao entra direto no Menu; quem nao tem ve o Login.
-        initialRouteName={logado ? 'Menu' : 'Login'}
+        // Quem tem sessao guardada destranca com biometria (Aula 6); quem nao
+        // tem ve o Login com e-mail e senha.
+        initialRouteName={logado ? 'LoginBiometrico' : 'Login'}
         screenOptions={{
           headerStyle: { backgroundColor: cores.primaria },
           headerTintColor: '#FFFFFF',
@@ -51,6 +53,7 @@ export default function App() {
         }}
       >
         <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="LoginBiometrico" component={LoginBiometrico} options={{ headerShown: false }} />
         <Stack.Screen name="Menu" component={Menu} options={{ headerShown: false }} />
         <Stack.Screen name="Medicos" component={Medico} options={{ title: 'Médicos' }} />
         <Stack.Screen name="CadastroEdicaoMedico" component={CadastroEdicaoMedicoScreen} />
