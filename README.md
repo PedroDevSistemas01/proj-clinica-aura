@@ -15,6 +15,7 @@ Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 - React Native + Expo (SDK 51)
 - React Navigation (native-stack)
 - expo-secure-store (cofre do SO para guardar o token de sessão)
+- expo-image-picker, expo-local-authentication e expo-location (Aula 6)
 - @react-native-async-storage/async-storage (cache local de dados não sensíveis, ex.: coordenadas da clínica)
 - Serviços externos (Aula 5): ViaCEP (CEP) e Nominatim/OpenStreetMap (geocoding), sem chave
 - json-server como API mock de dados (porta 3000)
@@ -48,6 +49,7 @@ Usuários de teste: `recepcao@clinica.com / clinica123` e `joao@clinica.com / me
 npm install
 npx expo install expo-secure-store   # garante a versão compatível com o SDK
 npx expo install @react-native-async-storage/async-storage   # Aula 5: cache local
+npx expo install expo-image-picker expo-local-authentication expo-location   # Aula 6
 npx expo start
 ```
 
@@ -135,6 +137,31 @@ existem dois clientes HTTP separados, de propósito:
 - [ ] **Aula 12 (22/10):** conta Google Cloud com faturamento, chave do Maps SDK for Android restrita ao pacote do app, no `.env` (ADR 003).
 - [ ] **Aula 13:** aparelho com chip para testar `expo-sms`; comparar plano de teste Zenvia × Twilio caso a clínica queira confirmação automática (ADR 005).
 
+## O que a Aula 6 entregou — câmera, biometria e GPS
+
+Três frentes independentes, cada uma na sua branch, integradas em
+`feat/aula6-integracao`. Checklist de fechamento, respostas da arguição e
+discussão ética em [`docs/aula6-checklist-perifericos.md`](docs/aula6-checklist-perifericos.md).
+
+| Frente | Branch | Onde | O quê |
+| --- | --- | --- | --- |
+| Bibliotecas | `feat/aula6-base` | `package.json`, `app.json` | `expo-image-picker`, `expo-local-authentication`, `expo-location` via `npx expo install`; textos de permissão em português no `app.json` |
+| Foto de perfil | `feat/aula6-foto-perfil` | `src/components/FotoPerfil.js`, `MedicoForm.js`, `PacienteForm.js` | Um componente para os dois cadastros: explica antes de pedir a câmera, trata negada e bloqueada (ajustes), `canceled` tratado, `aspect [1,1]` e `quality 0.6`, galeria como alternativa, foto opcional, `fotoUri` enviada com o formulário |
+| Login biométrico | `feat/aula6-login-biometrico` | `src/screens/Login/LoginBiometrico.js`, `App.js` | Quem já tem token abre nesta tela. Confere sensor, biometria cadastrada e token; mensagem diferente para cada falta; `user_cancel` tratado; "Entrar com e-mail e senha" sempre visível. **A biometria destranca o token do cofre, não autentica na API** |
+| Como chegar | `feat/aula6-como-chegar` | `src/services/localizacao.js`, `src/screens/Clinica/ComoChegar.js` | Único ponto do `expo-location`; permissão só em primeiro plano; `PermissaoNegada` com `canAskAgain`; `Accuracy.Balanced`; Haversine; distância, tempo estimado e precisão; endereço sempre visível; última posição conhecida para abrir rápido |
+
+### Como testar (aparelho físico)
+
+O emulador não serve para um teste honesto destes três recursos.
+
+1. **Foto:** Médicos → + → toque no avatar → "Tirar foto". Negue a câmera uma vez (aparece a explicação) e salve sem foto (funciona). Edite o médico: a foto continua lá.
+2. **Biometria:** faça login com senha, feche o app e abra de novo. Aparece "Entrar com digital". Cancele (volta para o login com senha, sem erro). Em aparelho sem digital cadastrada, a tela explica isso.
+3. **Como chegar:** Menu → Como chegar → "Usar minha localização". Negue duas vezes e reabra a tela: aparece "Abrir os ajustes do aparelho", e o endereço continua visível.
+
+> **Pendência consciente:** a foto é só a URI do cache do aparelho (some se o
+> cache for limpo) e as coordenadas da clínica estão em `src/config/clinica.js`.
+> Ver a lista completa no checklist.
+
 ## Estrutura
 
 ```
@@ -145,6 +172,7 @@ proj-clinica-aura/
 ├── db_clinica.json       -> base do json-server (API mock de dados)
 ├── .env.example          -> modelo de chaves de serviços externos (o .env fica fora do Git)
 ├── docs/decisoes/        -> registros de decisão arquitetural (ADR) dos serviços externos
+├── docs/aula6-checklist-perifericos.md -> checklist, arguição e ética da Aula 6
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
@@ -159,12 +187,16 @@ proj-clinica-aura/
     │   ├── httpExterno.js -> cliente HTTP de TERCEIROS (timeout, User-Agent, 429, sem token)
     │   ├── viacep.js     -> consultarCep()
     │   ├── geocoding.js  -> geocodificar() no Nominatim (1 req/s)
-    │   └── localizacaoClinica.js -> coordenadas da clínica com cache
+    │   ├── localizacaoClinica.js -> coordenadas da clínica com cache
+    │   └── localizacao.js -> GPS do aparelho: permissão, leitura, Haversine
     ├── components/
+    │   ├── FotoPerfil.js -> foto de perfil (câmera/galeria), usada nos dois forms
     │   ├── MedicoForm.js
     │   └── PacienteForm.js
     └── screens/
-        ├── Login/LoginScreen.js
+        ├── Login/
+        │   ├── LoginScreen.js
+        │   └── LoginBiometrico.js
         ├── Menu/Menu.js
         ├── Medico/
         │   ├── Medico.js
@@ -172,6 +204,7 @@ proj-clinica-aura/
         ├── Paciente/
         │   ├── Paciente.js
         │   └── CadastroEdicaoPacienteScreen.js
+        ├── Clinica/ComoChegar.js
         └── Sobre/SobreClinica.js
 ```
 
