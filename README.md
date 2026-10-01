@@ -204,6 +204,7 @@ proj-clinica-aura/
 ├── index.js              -> registra o App.js como ponto de entrada
 ├── app.json              -> configurações do app (nome, ícone, splash)
 ├── db_clinica.json       -> base do json-server (API mock de dados)
+├── PENDENCIAS.md         -> tudo o que ficou em aberto, num lugar só
 ├── .env.example          -> modelo de chaves de serviços externos (o .env fica fora do Git)
 ├── docs/decisoes/        -> registros de decisão arquitetural (ADR) dos serviços externos
 ├── docs/aula6-checklist-perifericos.md -> checklist, arguição e ética da Aula 6
