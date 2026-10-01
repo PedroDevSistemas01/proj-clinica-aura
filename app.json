@@ -45,6 +45,14 @@
         {
           "locationWhenInUsePermission": "A Clínica Aura usa sua localização só enquanto a tela Como chegar está aberta, para calcular a distância até a clínica. Ela não é enviada a ninguém."
         }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": [],
+          "bluetoothAlwaysPermission": "A Clínica Aura usa o Bluetooth só para ler os sinais vitais de um aparelho de medição durante a pré-consulta."
+        }
       ]
     ]
   }
