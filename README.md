@@ -16,6 +16,7 @@ Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 - React Navigation (native-stack)
 - expo-secure-store (cofre do SO para guardar o token de sessão)
 - expo-image-picker, expo-local-authentication e expo-location (Aula 6)
+- react-native-ble-plx + buffer (Aula 7; modo real exige development build)
 - @react-native-async-storage/async-storage (cache local de dados não sensíveis, ex.: coordenadas da clínica)
 - Serviços externos (Aula 5): ViaCEP (CEP) e Nominatim/OpenStreetMap (geocoding), sem chave
 - json-server como API mock de dados (porta 3000)
@@ -50,6 +51,7 @@ npm install
 npx expo install expo-secure-store   # garante a versão compatível com o SDK
 npx expo install @react-native-async-storage/async-storage   # Aula 5: cache local
 npx expo install expo-image-picker expo-local-authentication expo-location   # Aula 6
+npx expo install react-native-ble-plx && npm install buffer   # Aula 7 (BLE real só em development build)
 npx expo start
 ```
 
@@ -162,6 +164,38 @@ O emulador não serve para um teste honesto destes três recursos.
 > cache for limpo) e as coordenadas da clínica estão em `src/config/clinica.js`.
 > Ver a lista completa no checklist.
 
+## O que a Aula 7 entregou — sinais vitais via Bluetooth (BLE)
+
+Branch `feat/aula7-bluetooth`. Checklist, relato de falhas e arguição em
+[`docs/aula7-checklist-bluetooth.md`](docs/aula7-checklist-bluetooth.md).
+
+| Onde | O quê |
+| --- | --- |
+| `src/services/bluetooth.js` | Duas implementações com a mesma interface (`procurar`, `pararBusca`, `conectar`, `monitorarFrequencia`, `desconectar`). `MODO_SIMULADO` é o único ponto que escolhe. O real carrega `react-native-ble-plx` só dentro de `criarServicoBleReal()`, chama `discoverAllServicesAndCharacteristics()` após conectar e pede permissões conforme `Platform.Version` |
+| `src/services/frequenciaCardiaca.js` | `decodificarFrequencia()` pura (8 ou 16 bits, conforme a flag), faixa plausível e média |
+| `src/screens/Consulta/SinaisVitais.js` | Procurando (lista sem repetição) → conectando (indicador) → conectado (valor ao vivo, contagem, média). Percebe conexão perdida, importa a média para `POST /sinaisVitais` pelo `api.js` e tem sempre o link "Digitar os valores manualmente" |
+| `src/screens/Paciente/Paciente.js` | Botão "Sinais vitais" no cartão de cada paciente |
+| `db_clinica.json` | Coleção `sinaisVitais` para o json-server aceitar a gravação |
+| `tests/frequenciaCardiaca.test.mjs` | 6 testes da decodificação: `npm test` (Node 22+) |
+
+### Modo simulado × modo real
+
+- **Simulado (padrão, `MODO_SIMULADO = true`):** roda no **Expo Go**. Dois aparelhos falsos aparecem com atraso e enviam de 60 a 100 bpm a cada 1,5 s. Para provocar falhas, ligue uma chave por vez em `SIMULACAO` (`semAparelhos`, `falharAoConectar`, `perderConexaoAposLeituras`).
+- **Real (`MODO_SIMULADO = false`):** **não funciona no Expo Go**. O `react-native-ble-plx` tem código nativo e exige *development build*:
+
+```bash
+npx expo run:android
+```
+
+ou EAS Build (`eas build --profile development --platform android`). Precisa de um medidor que use o perfil padrão de frequência cardíaca (cinta cardíaca, oxímetro, relógio esportivo).
+
+### Como testar
+
+1. Suba o json-server (`npm run api`) e entre no app.
+2. Pacientes → "Sinais vitais" no cartão de um paciente. A busca encontra os dois aparelhos simulados e termina sozinha.
+3. Conecte, espere pelo menos 3 leituras e toque em "Importar média para o prontuário". Confira em http://localhost:3000/sinaisVitais.
+4. Saia da tela conectado e confira `[bluetooth simulado] desconectando` no Metro.
+
 ## Estrutura
 
 ```
@@ -173,6 +207,8 @@ proj-clinica-aura/
 ├── .env.example          -> modelo de chaves de serviços externos (o .env fica fora do Git)
 ├── docs/decisoes/        -> registros de decisão arquitetural (ADR) dos serviços externos
 ├── docs/aula6-checklist-perifericos.md -> checklist, arguição e ética da Aula 6
+├── docs/aula7-checklist-bluetooth.md -> checklist, falhas e arguição da Aula 7
+├── tests/                -> testes de funções puras (npm test)
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
@@ -188,7 +224,9 @@ proj-clinica-aura/
     │   ├── viacep.js     -> consultarCep()
     │   ├── geocoding.js  -> geocodificar() no Nominatim (1 req/s)
     │   ├── localizacaoClinica.js -> coordenadas da clínica com cache
-    │   └── localizacao.js -> GPS do aparelho: permissão, leitura, Haversine
+    │   ├── localizacao.js -> GPS do aparelho: permissão, leitura, Haversine
+    │   ├── bluetooth.js  -> BLE: implementações simulada e real, mesma interface
+    │   └── frequenciaCardiaca.js -> decodificação pura do valor lido
     ├── components/
     │   ├── FotoPerfil.js -> foto de perfil (câmera/galeria), usada nos dois forms
     │   ├── MedicoForm.js
@@ -205,6 +243,7 @@ proj-clinica-aura/
         │   ├── Paciente.js
         │   └── CadastroEdicaoPacienteScreen.js
         ├── Clinica/ComoChegar.js
+        ├── Consulta/SinaisVitais.js
         └── Sobre/SobreClinica.js
 ```
 
