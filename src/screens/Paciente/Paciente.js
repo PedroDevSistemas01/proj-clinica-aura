@@ -145,6 +145,14 @@ export default function Paciente({ navigation }) {
             {!!item.convenio && <Text style={styles.convenio}>{item.convenio}</Text>}
 
             <View style={styles.acoes}>
+              {/* Pré-consulta (Aula 7): importa a frequência cardíaca do aparelho. */}
+              <TouchableOpacity
+                style={styles.botaoSecundario}
+                onPress={() => navigation.navigate('SinaisVitais', { paciente: item })}
+              >
+                <Text style={styles.botaoSecundarioTexto}>Sinais vitais</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.botaoSecundario}
                 onPress={() =>
@@ -250,6 +258,7 @@ const styles = StyleSheet.create({
   },
   acoes: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: espaco.sm,
     marginTop: espaco.md,
   },

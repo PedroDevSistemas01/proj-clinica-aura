@@ -102,5 +102,6 @@
     { "id": 4, "medicoId": 3, "diaSemana": "Quinta", "inicio": "08:00", "fim": "11:00" },
     { "id": 5, "medicoId": 4, "diaSemana": "Sexta", "inicio": "13:00", "fim": "17:00" },
     { "id": 6, "medicoId": 5, "diaSemana": "Segunda", "inicio": "14:00", "fim": "18:00" }
-  ]
+  ],
+  "sinaisVitais": []
 }
