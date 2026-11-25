@@ -17,6 +17,7 @@ import SinaisVitais from './src/screens/Consulta/SinaisVitais';
 import Consultas from './src/screens/Consulta/Consultas';
 import AgendarConsulta from './src/screens/Consulta/AgendarConsulta';
 import DetalheConsulta from './src/screens/Consulta/DetalheConsulta';
+import EnviarSms from './src/screens/Consulta/EnviarSms';
 import SincronizarAgenda from './src/screens/Agenda/SincronizarAgenda';
 import HistoricoSincronizacao from './src/screens/Agenda/HistoricoSincronizacao';
 import { estaLogado } from './src/services/sessao';
@@ -119,6 +120,7 @@ export default function App() {
         <Stack.Screen name="Consultas" component={Consultas} options={{ title: 'Consultas' }} />
         <Stack.Screen name="AgendarConsulta" component={AgendarConsulta} options={{ title: 'Agendar consulta' }} />
         <Stack.Screen name="DetalheConsulta" component={DetalheConsulta} options={{ title: 'Consulta' }} />
+        <Stack.Screen name="EnviarSms" component={EnviarSms} options={{ title: 'Enviar SMS' }} />
         <Stack.Screen name="SincronizarAgenda" component={SincronizarAgenda} options={{ title: 'Conflitos da agenda' }} />
         <Stack.Screen name="HistoricoSincronizacao" component={HistoricoSincronizacao} options={{ title: 'Sincronização' }} />
       </Stack.Navigator>
