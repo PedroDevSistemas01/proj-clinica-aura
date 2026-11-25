@@ -10,7 +10,9 @@
     "api": "json-server --watch db_clinica.json --port 3000",
     "auth-api": "node servidor/auth-api.js",
     "push": "node servidor/enviar-push.js",
-    "test": "node --test \"tests/*.test.mjs\""
+    "gerar-consultas": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON servidor/gerar-consultas.js",
+    "medir": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/medir-conflitos.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"tests/*.test.mjs\""
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",

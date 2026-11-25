@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { cores, espaco } from '../../theme';
 import { limparToken } from '../../services/sessao';
@@ -12,6 +12,11 @@ const OPCOES = [
     rota: 'Consultas',
     titulo: 'Consultas',
     descricao: 'Agendar, remarcar e cancelar, com lembrete uma hora antes',
+  },
+  {
+    rota: 'SincronizarAgenda',
+    titulo: 'Conflitos da agenda',
+    descricao: 'Verifica horários sobrepostos sem travar o app',
   },
   {
     rota: 'Medicos',
@@ -68,7 +73,8 @@ export default function Menu({ navigation }) {
         <Text style={styles.subtitulo}>Agendamento de consultas</Text>
       </View>
 
-      <View style={styles.lista}>
+      {/* Rolagem: com sete opções, a lista não cabe em telas pequenas. */}
+      <ScrollView contentContainerStyle={styles.lista}>
         {OPCOES.map((opcao) => (
           <TouchableOpacity
             key={opcao.rota}
@@ -79,7 +85,7 @@ export default function Menu({ navigation }) {
             <Text style={styles.cartaoDescricao}>{opcao.descricao}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       <View style={styles.rodape}>
         {!!avisos && (
@@ -119,6 +125,7 @@ const styles = StyleSheet.create({
   },
   lista: {
     paddingHorizontal: espaco.lg,
+    paddingBottom: espaco.md,
     gap: espaco.md,
   },
   cartao: {
@@ -139,7 +146,7 @@ const styles = StyleSheet.create({
     marginTop: espaco.xs,
   },
   rodape: {
-    marginTop: 'auto',
+    paddingTop: espaco.sm,
     paddingHorizontal: espaco.lg,
     paddingBottom: espaco.lg,
   },

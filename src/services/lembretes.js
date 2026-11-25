@@ -210,7 +210,9 @@ export async function sincronizarLembretes(consultas) {
   const mapa = await lerMapa();
   const ativas = new Map(
     consultas
-      .filter((c) => c.status !== 'cancelada')
+      // Consultas geradas para a medição da Aula 10 não ganham lembrete: o
+      // sistema limita os agendamentos (64 no iOS) e seriam milhares.
+      .filter((c) => c.status !== 'cancelada' && !c.gerada)
       .map((c) => [String(c.id), c])
   );
 
