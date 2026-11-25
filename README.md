@@ -254,6 +254,54 @@ no aparelho em [`docs/aula9-checklist-push.md`](docs/aula9-checklist-push.md).
 > development build, aparelho físico e `projectId` do EAS. Sem isso o app
 > mostra o motivo e segue com o lembrete local da Aula 8.
 
+## O que a Aula 10 entregou — conflitos da agenda sem travar a interface
+
+Branch `feat/aula10-responsividade`. Checklist, arguição e a ordem certa das
+perguntas em [`docs/aula10-checklist-responsividade.md`](docs/aula10-checklist-responsividade.md).
+Decisão aparelho × servidor no [ADR 006](docs/decisoes/006-verificacao-de-conflitos.md).
+
+| Onde | O quê |
+| --- | --- |
+| `servidor/gerar-consultas.js` | `npm run gerar-consultas -- 3000` grava de 2 a 5 mil consultas (`gerada: true`, médicos 1 a 10, 30 dias, 30/60 min, horários repetidos de propósito). `-- limpar` tira só as geradas. **Não commitar o db com elas** |
+| `src/services/conflitos.js` | `conflita` (`inicioA < fimB && inicioB < fimA`), `detectarConflitosIngenuo`, `detectarConflitosOtimizado` (agrupa por médico, ordena) e `detectarConflitos` (fatiado, com progresso e cancelamento) |
+| `src/services/processamento.js` | `cederAVez` (`setTimeout(0)`), `processarEmFatias`, `criarSinalDeCancelamento` |
+| `src/hooks/useTarefaPesada.js` | Estados rodando / progresso / resultado / erro; ref de "ainda montado"; cancela ao sair da tela |
+| `src/screens/Agenda/SincronizarAgenda.js` | Ingênuo bloqueante × fatiado lado a lado, barra de progresso, Cancelar, escolha da fatia e contador de toques |
+| `tests/conflitos.test.mjs` e `tests/medir-conflitos.mjs` | As três versões dão o mesmo resultado; `npm run medir` reproduz os números abaixo |
+
+### Medições (Passos 2, 3 e 4)
+
+Medidas com `npm run medir` (Node 24, PC Windows). No aparelho os números
+são maiores; a tela mostra os dela para a squad anotar.
+
+| Consultas | Ingênuo | Comparações | Otimizado | Comparações | Conflitos |
+| --- | --- | --- | --- | --- | --- |
+| 3000 | **469 ms** (tudo bloqueado) | 4.498.500 | **5 ms** | 4.530 | 1540 (iguais) |
+| 5000 | **1033 ms** | 12.497.500 | **9 ms** | 9.106 | 4116 (iguais) |
+
+| Fatia (3000 consultas) | Tempo total | Fatias | Maior bloqueio da thread |
+| --- | --- | --- | --- |
+| 100 | 530 ms | 35 | 15,7 ms |
+| **500** | 156 ms | 10 | 3,5 ms |
+| 5000 | 158 ms | 10 | 3,0 ms |
+
+**Fatia escolhida: 500.** Com 100, o tempo total triplica só de esperar o
+`setTimeout` (≈15 ms cada no Windows, ≈1 quadro no celular). Com 5000 cada
+médico vira um bloco único: hoje passa, porque o algoritmo melhorado é barato,
+mas o bloqueio cresce com a agenda. 500 mantém o maior bloqueio bem abaixo de
+um quadro (16 ms) sem desperdiçar tempo.
+
+A maior lição dos números: o Passo 3 (fazer menos trabalho) rendeu ~100×;
+o Passo 4 (fatiar) não deixa mais rápido, deixa a tela viva.
+
+### react-native-worklets (extensão)
+
+Worklets rodam JavaScript numa thread separada da thread da interface. Seriam
+justificáveis se, mesmo com o algoritmo melhor, um cálculo inevitável no
+aparelho passasse de centenas de milissegundos (ex.: processar sinais vitais
+contínuos em tempo real). Não é o caso hoje: o otimizado leva 5 ms e o certo
+é mover a verificação para o servidor (ADR 006).
+
 ## Estrutura
 
 ```
@@ -269,12 +317,14 @@ proj-clinica-aura/
 ├── docs/aula7-checklist-bluetooth.md -> checklist, falhas e arguição da Aula 7
 ├── docs/aula8-checklist-notificacoes.md -> checklist, arguição e dose da Aula 8
 ├── docs/aula9-checklist-push.md -> push: entregável, falhas, ética e teste no aparelho
+├── docs/aula10-checklist-responsividade.md -> medições, checklist e arguição da Aula 10
 ├── tests/                -> testes de funções puras (npm test)
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
 │   ├── auth-api.js       -> API de autenticação (Node puro, porta 3001)
-│   └── enviar-push.js    -> envio de push pelo terminal (lotes, tickets, recibos)
+│   ├── enviar-push.js    -> envio de push pelo terminal (lotes, tickets, recibos)
+│   └── gerar-consultas.js -> volume de consultas para a Aula 10
 └── src/
     ├── theme.js          -> cores e espaçamentos compartilhados
     ├── config/
@@ -291,7 +341,11 @@ proj-clinica-aura/
     │   ├── frequenciaCardiaca.js -> decodificação pura do valor lido
     │   ├── lembretes.js  -> lembrete local de consulta (expo-notifications)
     │   ├── navegacao.js  -> ref de navegação + destino pendente do toque
-    │   └── push.js       -> token de push + registro do dispositivo na API
+    │   ├── push.js       -> token de push + registro do dispositivo na API
+    │   ├── conflitos.js  -> verificação de conflitos (ingênua, otimizada, fatiada)
+    │   └── processamento.js -> cederAVez, fatias e cancelamento
+    ├── hooks/
+    │   └── useTarefaPesada.js -> progresso + cancelamento para tarefa pesada
     ├── utils/
     │   └── dataHora.js   -> formatar e montar data/hora (puro, testado)
     ├── components/
@@ -309,6 +363,7 @@ proj-clinica-aura/
         ├── Paciente/
         │   ├── Paciente.js
         │   └── CadastroEdicaoPacienteScreen.js
+        ├── Agenda/SincronizarAgenda.js
         ├── Clinica/ComoChegar.js
         ├── Consulta/
         │   ├── SinaisVitais.js
