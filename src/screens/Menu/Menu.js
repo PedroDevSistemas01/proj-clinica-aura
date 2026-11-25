@@ -4,6 +4,8 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 import { cores, espaco } from '../../theme';
 import { limparToken } from '../../services/sessao';
 import { desregistrarDispositivo, registrarDispositivo } from '../../services/push';
+import { desregistrarTarefa, registrarTarefa } from '../../services/tarefaBackground';
+import useSincronizacao from '../../hooks/useSincronizacao';
 
 // Menu principal do app. A partir daqui a squad chega nas telas
 // de Médicos e Pacientes, que consomem a API RESTful da clínica.
@@ -17,6 +19,11 @@ const OPCOES = [
     rota: 'SincronizarAgenda',
     titulo: 'Conflitos da agenda',
     descricao: 'Verifica horários sobrepostos sem travar o app',
+  },
+  {
+    rota: 'HistoricoSincronizacao',
+    titulo: 'Sincronização',
+    descricao: 'Quando a agenda foi atualizada pela última vez e o que mudou',
   },
   {
     rota: 'Medicos',
@@ -51,6 +58,9 @@ export default function Menu({ navigation }) {
     registrarDispositivo().then((resultado) => {
       if (ativo) setAvisos(resultado);
     });
+    // Aula 11: tarefa periódica (só tem efeito em development build e se o
+    // usuário não a desligou na tela de Sincronização).
+    registrarTarefa();
     return () => {
       ativo = false;
     };
@@ -59,9 +69,15 @@ export default function Menu({ navigation }) {
   // Logout (Passo 5, item 23): apaga o token do cofre E volta para o Login.
   // As duas coisas, sempre — só navegar deixaria a sessão viva no cofre, e a
   // próxima pessoa que abrisse o aparelho entraria sem senha.
+  // Aula 11: ao voltar para o app, sincroniza a agenda (respeitando o
+  // intervalo mínimo). Funciona até no Expo Go.
+  useSincronizacao();
+
   async function sair() {
     // Quem saiu não deve continuar recebendo avisos neste aparelho.
     await desregistrarDispositivo();
+    // Sem sessão a tarefa não tem o que fazer: não gasta bateria à toa.
+    await desregistrarTarefa();
     await limparToken();
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   }
@@ -73,7 +89,7 @@ export default function Menu({ navigation }) {
         <Text style={styles.subtitulo}>Agendamento de consultas</Text>
       </View>
 
-      {/* Rolagem: com sete opções, a lista não cabe em telas pequenas. */}
+      {/* Rolagem: com várias opções, a lista não cabe em telas pequenas. */}
       <ScrollView contentContainerStyle={styles.lista}>
         {OPCOES.map((opcao) => (
           <TouchableOpacity

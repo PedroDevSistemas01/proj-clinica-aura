@@ -80,6 +80,13 @@ export async function garantirPermissao() {
   return pedido.granted;
 }
 
+// Só confere, sem pedir. Usado pela sincronização em background (Aula 11),
+// que não tem tela para mostrar o pedido de permissão.
+export async function temPermissao() {
+  const atual = await Notifications.getPermissionsAsync();
+  return atual.granted;
+}
+
 // ---------------------------------------------------------------------------
 // Mapa consultaId -> identificador (AsyncStorage)
 // ---------------------------------------------------------------------------
