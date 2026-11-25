@@ -12,6 +12,7 @@ import {
 
 import { salvarToken } from '../../services/sessao';
 import { cores, espaco } from '../../theme';
+import { rotasAposEntrar } from '../../services/navegacao';
 
 // Tela de login (Aula 4, Passo 2).
 // Faz POST /login na API de autenticação, guarda o token pelo módulo de sessão
@@ -71,7 +72,9 @@ export default function LoginScreen({ navigation }) {
 
       // reset, não navigate: o usuário não pode "voltar" para o Login com o
       // gesto de voltar (Passo 5, item 22).
-      navigation.reset({ index: 0, routes: [{ name: ROTA_INICIAL }] });
+      // Se o app abriu pelo toque num lembrete (Aula 8), a consulta abre por
+      // cima do Menu, só depois de entrar.
+      navigation.reset(rotasAposEntrar(ROTA_INICIAL));
     } catch (e) {
       // Erro de rede / API fora do ar — separado do 401.
       setErro('Não foi possível entrar. Verifique se a API está no ar.');

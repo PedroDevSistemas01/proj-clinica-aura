@@ -14,8 +14,22 @@ import CadastroEdicaoPacienteScreen from './src/screens/Paciente/CadastroEdicaoP
 import SobreClinica from './src/screens/Sobre/SobreClinica';
 import ComoChegar from './src/screens/Clinica/ComoChegar';
 import SinaisVitais from './src/screens/Consulta/SinaisVitais';
+import Consultas from './src/screens/Consulta/Consultas';
+import AgendarConsulta from './src/screens/Consulta/AgendarConsulta';
+import DetalheConsulta from './src/screens/Consulta/DetalheConsulta';
 import { estaLogado } from './src/services/sessao';
+import {
+  configurarHandler,
+  obterToqueQueAbriuOApp,
+  ouvirToqueNaNotificacao,
+  prepararCanal,
+} from './src/services/lembretes';
+import { irParaDestino, navigationRef } from './src/services/navegacao';
 import { cores } from './src/theme';
+
+// Aula 8, Passo 2, item 4: o handler é configurado UMA vez, no topo do
+// módulo, antes de qualquer notificação chegar com o app aberto.
+configurarHandler();
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +42,22 @@ export default function App() {
 
   useEffect(() => {
     estaLogado().then(setLogado);
+    // Aula 8, item 5: canal do Android criado na inicialização.
+    prepararCanal().catch(() => console.log('Não foi possível criar o canal de lembretes.'));
+  }, []);
+
+  // Aula 8, Passo 4: tocar na notificação leva à consulta.
+  useEffect(() => {
+    // Caminho A — app aberto ou em segundo plano.
+    const pararDeOuvir = ouvirToqueNaNotificacao(irParaDestino);
+
+    // Caminho B — app estava FECHADO e foi aberto pelo toque.
+    obterToqueQueAbriuOApp()
+      .then(irParaDestino)
+      .catch(() => console.log('Não foi possível ler o toque que abriu o app.'));
+
+    // Item 22: listener esquecido é vazamento.
+    return pararDeOuvir;
   }, []);
 
   // Enquanto verifica, mostra um indicador. Sem isso, o app pisca a tela de
@@ -41,7 +71,7 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar style="light" />
       <Stack.Navigator
         // Quem tem sessao guardada destranca com biometria (Aula 6); quem nao
@@ -64,6 +94,9 @@ export default function App() {
         <Stack.Screen name="SobreClinica" component={SobreClinica} options={{ title: 'Sobre a clínica' }} />
         <Stack.Screen name="ComoChegar" component={ComoChegar} options={{ title: 'Como chegar' }} />
         <Stack.Screen name="SinaisVitais" component={SinaisVitais} options={{ title: 'Sinais vitais' }} />
+        <Stack.Screen name="Consultas" component={Consultas} options={{ title: 'Consultas' }} />
+        <Stack.Screen name="AgendarConsulta" component={AgendarConsulta} options={{ title: 'Agendar consulta' }} />
+        <Stack.Screen name="DetalheConsulta" component={DetalheConsulta} options={{ title: 'Consulta' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

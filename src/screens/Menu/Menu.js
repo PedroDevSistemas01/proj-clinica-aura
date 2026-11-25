@@ -8,6 +8,11 @@ import { limparToken } from '../../services/sessao';
 // de Médicos e Pacientes, que consomem a API RESTful da clínica.
 const OPCOES = [
   {
+    rota: 'Consultas',
+    titulo: 'Consultas',
+    descricao: 'Agendar, remarcar e cancelar, com lembrete uma hora antes',
+  },
+  {
     rota: 'Medicos',
     titulo: 'Médicos',
     descricao: 'Listar, cadastrar, editar e excluir o corpo clínico',

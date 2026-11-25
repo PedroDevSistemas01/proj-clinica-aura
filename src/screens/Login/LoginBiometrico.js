@@ -11,6 +11,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import { obterToken } from '../../services/sessao';
 import { cores, espaco } from '../../theme';
+import { rotasAposEntrar } from '../../services/navegacao';
 
 // Login com biometria (Aula 6, Passo 3).
 //
@@ -89,7 +90,9 @@ export default function LoginBiometrico({ navigation }) {
       if (resultado.success) {
         // O token continua no cofre; o api.js o lê em cada requisição. Se ele
         // tiver expirado no servidor, o 401 do api.js manda de volta ao login.
-        navigation.reset({ index: 0, routes: [{ name: ROTA_INICIAL }] });
+        // Se o app abriu pelo toque num lembrete (Aula 8), a consulta abre por
+        // cima do Menu, só depois de entrar.
+        navigation.reset(rotasAposEntrar(ROTA_INICIAL));
         return;
       }
 
