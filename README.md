@@ -54,6 +54,7 @@ npx expo install @react-native-async-storage/async-storage   # Aula 5: cache loc
 npx expo install expo-image-picker expo-local-authentication expo-location   # Aula 6
 npx expo install react-native-ble-plx && npm install buffer   # Aula 7 (BLE real só em development build)
 npx expo install expo-notifications   # Aula 8
+npx expo install expo-device   # Aula 9 (push só em development build)
 npx expo start
 ```
 
@@ -234,6 +235,25 @@ detalhes dentro do app, depois de passar pelo login.
 5. Agende de novo, **feche o app por completo**, espere o lembrete e toque nele: o app abre na tela da consulta (depois da biometria, se houver sessão).
 6. Volte `ANTECEDENCIA_TESTE_MINUTOS` para `null`.
 
+## O que a Aula 9 entregou — push notifications
+
+Branch `feat/aula9-push`. Entregável, falhas tratadas, ética e roteiro de teste
+no aparelho em [`docs/aula9-checklist-push.md`](docs/aula9-checklist-push.md).
+
+| Onde | O quê |
+| --- | --- |
+| `src/services/push.js` | `obterTokenPush` (aparelho físico, canal, permissão, `projectId` do EAS), `registrarDispositivo` (POST/PUT em `/dispositivos`, a cada abertura), `desregistrarDispositivo` (logout) e `ouvirPushRecebido`. Nunca derruba o app: devolve o motivo quando o push não está disponível |
+| `src/services/sessao.js` | Guarda também `{ id, nome, perfil }` do usuário no login, para vincular o dispositivo mesmo quando a pessoa entra só com biometria |
+| `src/screens/Menu/Menu.js` | Registra o dispositivo ao abrir; rodapé diz se os avisos da clínica estão ativos ou por que não estão |
+| `App.js` | Push de `consulta-cancelada` com o app aberto cancela o lembrete local daquela consulta |
+| `servidor/enviar-push.js` | Passos 3 e 4: lê `/dispositivos`, envia em lotes de 100, confere o `status` de cada ticket, lê os recibos e apaga tokens `DeviceNotRegistered`. Modos `teste`, `cancelamento` e `lembretes-do-dia` (`npm run push -- <modo>`) |
+| `app.json` | Plugin `expo-notifications` (cor do ícone) |
+| `db_clinica.json` | Coleção `dispositivos` (`token`, `usuarioId`, `plataforma`, `criadoEm`, `atualizadoEm`) |
+
+> **Push não roda no Expo Go** (Android, SDK 53+) nem em emulador: exige
+> development build, aparelho físico e `projectId` do EAS. Sem isso o app
+> mostra o motivo e segue com o lembrete local da Aula 8.
+
 ## Estrutura
 
 ```
@@ -248,11 +268,13 @@ proj-clinica-aura/
 ├── docs/aula6-checklist-perifericos.md -> checklist, arguição e ética da Aula 6
 ├── docs/aula7-checklist-bluetooth.md -> checklist, falhas e arguição da Aula 7
 ├── docs/aula8-checklist-notificacoes.md -> checklist, arguição e dose da Aula 8
+├── docs/aula9-checklist-push.md -> push: entregável, falhas, ética e teste no aparelho
 ├── tests/                -> testes de funções puras (npm test)
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
-│   └── auth-api.js       -> API de autenticação (Node puro, porta 3001)
+│   ├── auth-api.js       -> API de autenticação (Node puro, porta 3001)
+│   └── enviar-push.js    -> envio de push pelo terminal (lotes, tickets, recibos)
 └── src/
     ├── theme.js          -> cores e espaçamentos compartilhados
     ├── config/
@@ -268,7 +290,8 @@ proj-clinica-aura/
     │   ├── bluetooth.js  -> BLE: implementações simulada e real, mesma interface
     │   ├── frequenciaCardiaca.js -> decodificação pura do valor lido
     │   ├── lembretes.js  -> lembrete local de consulta (expo-notifications)
-    │   └── navegacao.js  -> ref de navegação + destino pendente do toque
+    │   ├── navegacao.js  -> ref de navegação + destino pendente do toque
+    │   └── push.js       -> token de push + registro do dispositivo na API
     ├── utils/
     │   └── dataHora.js   -> formatar e montar data/hora (puro, testado)
     ├── components/

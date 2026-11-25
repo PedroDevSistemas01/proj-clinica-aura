@@ -1,4 +1,4 @@
-# Pendências do projeto (atualizado na Aula 8)
+# Pendências do projeto (atualizado na Aula 9)
 
 Lista única do que ficou em aberto até aqui. Cada item aponta onde está o detalhe.
 
@@ -7,7 +7,7 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [ ] **Bluetooth em modo real (Aula 7):** trocar `MODO_SIMULADO` para `false` em `src/services/bluetooth.js` e testar num development build (`npx expo run:android` ou EAS) com um medidor de frequência cardíaca de verdade. Detalhes: `docs/aula7-checklist-bluetooth.md`.
 - [ ] **Lembrete local no aparelho (Aula 8):** com `ANTECEDENCIA_TESTE_MINUTOS = 1`, conferir o disparo com o app fechado, o toque com o app fechado abrindo a consulta e a lista de pendentes vazia depois de cancelar. Detalhes: `docs/aula8-checklist-notificacoes.md`.
 - [ ] **Conferir câmera, biometria e GPS num celular (Aula 6):** os itens abertos estão em `docs/aula6-checklist-perifericos.md`.
-- [ ] **Development build para push (Aula 9):** conta Expo/EAS, projeto Firebase e um aparelho Android (ADR 004). O mesmo build serve ao Bluetooth real.
+- [ ] **Development build para push (Aula 9):** conta Expo/EAS (`eas init` preenche `extra.eas.projectId`), `android.package` no `app.json`, projeto Firebase com credencial FCM V1 (`eas credentials`) e um aparelho Android (ADR 004). O mesmo build serve ao Bluetooth real. Sem isso o código está pronto, mas nenhum push foi recebido de verdade: só o envio com token inventado foi conferido (`HTTP 200` + `DeviceNotRegistered`). Roteiro: `docs/aula9-checklist-push.md`.
 
 ## Precisa de conta, chave ou decisão da squad
 
@@ -23,6 +23,9 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [ ] **Coordenadas da clínica no código:** `src/config/clinica.js`. Viram marcador de mapa na Aula 12.
 - [ ] **Sinais vitais fora da tela de consulta (Aula 7):** a tela de consulta passou a existir na Aula 8 (`DetalheConsulta`); falta levar a importação para lá.
 - [ ] **Lembrete preso ao aparelho (Aula 8):** se a recepção cancela pelo sistema, o lembrete local dispara assim mesmo até o paciente abrir a lista de consultas (`sincronizarLembretes`). Resolve-se com push (Aula 9).
+- [ ] **Token ligado ao usuário, não ao paciente (Aula 9):** o app é usado pela equipe (recepção/médico), então `lembretes-do-dia` avisa todo aparelho registrado. Com login de paciente na API, filtrar por paciente.
+- [ ] **Recibos lidos na hora (Aula 9):** o script espera 15 s; em produção os recibos devem ser lidos mais tarde, por uma tarefa agendada no servidor.
+- [ ] **Lembrete local com o app fechado (Aula 9):** o push de cancelamento apaga o lembrete local só com o app aberto ou depois do toque; com o app fechado ele ainda pode disparar.
 - [ ] **Antecedência fixa (Aula 8):** 1 hora para todos. Extensões não feitas: paciente escolher (1 hora / 1 dia) e segundo lembrete na véspera.
 - [ ] **Data digitada à mão (Aula 8):** o agendamento usa campos DD/MM/AAAA e HH:MM; um seletor de data nativo exigiria mais uma biblioteca.
 - [ ] **Biometria ativa para todos:** oferecer como opção nos ajustes do app (extensão da Aula 6).
