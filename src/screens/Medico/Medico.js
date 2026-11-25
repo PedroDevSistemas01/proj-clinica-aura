@@ -115,8 +115,8 @@ export default function Medico({ navigation }) {
 
   if (carregando) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
-        <ActivityIndicator size="large" color={cores.primaria} />
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-medicos">
+        <ActivityIndicator size="large" color={cores.primaria} testID="carregando" />
         <Text style={styles.textoCarregando}>Carregando médicos...</Text>
       </SafeAreaView>
     );
@@ -124,11 +124,11 @@ export default function Medico({ navigation }) {
 
   if (erro) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-medicos">
         <View style={styles.caixaErro}>
           <Text style={styles.tituloErro}>Falha na comunicação</Text>
-          <Text style={styles.mensagemErro}>{erro}</Text>
-          <TouchableOpacity style={styles.botaoPrimario} onPress={buscarMedicos}>
+          <Text style={styles.mensagemErro} testID="mensagem-erro">{erro}</Text>
+          <TouchableOpacity style={styles.botaoPrimario} onPress={buscarMedicos} testID="botao-tentar-novamente">
             <Text style={styles.botaoPrimarioTexto}>Tentar novamente</Text>
           </TouchableOpacity>
         </View>
@@ -137,7 +137,7 @@ export default function Medico({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-medicos">
       <View style={styles.barraTopo}>
         <TextInput
           style={styles.campoBusca}
@@ -155,6 +155,7 @@ export default function Medico({ navigation }) {
       </View>
 
       <SectionList
+        testID="lista-medicos"
         sections={secoes}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.conteudoLista}
@@ -170,7 +171,7 @@ export default function Medico({ navigation }) {
           </Text>
         }
         renderItem={({ item }) => (
-          <View style={styles.cartao}>
+          <View style={styles.cartao} testID={`medico-${item.id}`}>
             <Text style={styles.nome}>{item.nome}</Text>
             <Text style={styles.especialidade}>{item.especialidade}</Text>
             <Text style={styles.detalhe}>{item.crm}</Text>

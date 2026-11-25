@@ -14,6 +14,7 @@ import {
 import { cores, espaco } from '../../theme';
 import { get, post, put, SessaoExpirada } from '../../services/api';
 import { agendarLembrete } from '../../services/lembretes';
+import { validarAgendamento } from '../../regras';
 import { formatarData, formatarDataHora, formatarHora, montarDataHora } from '../../utils/dataHora';
 
 // Agendar e remarcar consulta (Aula 8, Passo 3).
@@ -41,6 +42,7 @@ export default function AgendarConsulta({ route, navigation }) {
   const [textoData, setTextoData] = useState(consulta ? formatarData(consulta.dataHora) : '');
   const [textoHora, setTextoHora] = useState(consulta ? formatarHora(consulta.dataHora) : '');
   const [duracao, setDuracao] = useState(consulta?.duracaoMinutos ?? 30);
+  const [erro, setErro] = useState(null);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: remarcando ? 'Remarcar consulta' : 'Agendar consulta' });
@@ -89,18 +91,11 @@ export default function AgendarConsulta({ route, navigation }) {
 
   async function salvar() {
     const dataHora = montarDataHora(textoData, textoHora);
-    if (!pacienteId || !medicoId) {
-      Alert.alert('Dados incompletos', 'Escolha o paciente e o médico.');
-      return;
-    }
-    if (!dataHora) {
-      Alert.alert('Data inválida', 'Use o formato DD/MM/AAAA e a hora HH:MM.');
-      return;
-    }
-    if (dataHora.getTime() <= Date.now()) {
-      Alert.alert('Data inválida', 'A consulta precisa ser em um horário futuro.');
-      return;
-    }
+    // Aula 14: regra em src/regras.js. O erro aparece na tela (testável),
+    // não só num Alert.
+    const problema = validarAgendamento({ pacienteId, medicoId, dataHora });
+    setErro(problema);
+    if (problema) return;
 
     const dados = {
       pacienteId: Number(pacienteId),
@@ -126,9 +121,15 @@ export default function AgendarConsulta({ route, navigation }) {
       }
 
       const titulo = remarcando ? 'Consulta remarcada' : 'Consulta agendada';
-      const texto = resultado.falhou
-        ? 'A consulta foi salva, mas não foi possível agendar o lembrete neste aparelho.'
-        : mensagemDoLembrete(resultado);
+      // Resumo do que foi gravado (Aula 14, Passo 5: "confirma e mostra o resumo").
+      const nomePaciente = pacientes.find((p) => String(p.id) === pacienteId)?.nome ?? 'Paciente';
+      const nomeMedico = medicos.find((m) => String(m.id) === medicoId)?.nome ?? 'médico';
+      const resumo = `${nomePaciente} com ${nomeMedico}, ${formatarDataHora(dataHora)} (${duracao} min).`;
+      const texto = `${resumo}\n\n${
+        resultado.falhou
+          ? 'A consulta foi salva, mas não foi possível agendar o lembrete neste aparelho.'
+          : mensagemDoLembrete(resultado)
+      }`;
 
       Alert.alert(titulo, texto, [{ text: 'OK', onPress: () => navigation.goBack() }]);
     } catch (e) {
@@ -145,20 +146,21 @@ export default function AgendarConsulta({ route, navigation }) {
 
   if (carregando) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
-        <ActivityIndicator size="large" color={cores.primaria} />
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-agendar">
+        <ActivityIndicator size="large" color={cores.primaria} testID="carregando" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-agendar">
       <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
         <Text style={styles.rotulo}>Paciente</Text>
         <View style={styles.opcoes}>
           {pacientes.map((p) => (
             <Opcao
               key={p.id}
+              testID={`paciente-${p.id}`}
               texto={p.nome}
               selecionada={pacienteId === String(p.id)}
               onPress={() => setPacienteId(String(p.id))}
@@ -172,6 +174,7 @@ export default function AgendarConsulta({ route, navigation }) {
           {medicos.map((m) => (
             <Opcao
               key={m.id}
+              testID={`medico-${m.id}`}
               texto={`${m.nome} · ${m.especialidade}`}
               selecionada={medicoId === String(m.id)}
               onPress={() => setMedicoId(String(m.id))}
@@ -183,6 +186,7 @@ export default function AgendarConsulta({ route, navigation }) {
           <View style={styles.colunaLarga}>
             <Text style={styles.rotulo}>Data</Text>
             <TextInput
+              testID="campo-data"
               style={styles.campo}
               value={textoData}
               onChangeText={setTextoData}
@@ -194,6 +198,7 @@ export default function AgendarConsulta({ route, navigation }) {
           <View style={styles.coluna}>
             <Text style={styles.rotulo}>Hora</Text>
             <TextInput
+              testID="campo-hora"
               style={styles.campo}
               value={textoHora}
               onChangeText={setTextoHora}
@@ -211,11 +216,24 @@ export default function AgendarConsulta({ route, navigation }) {
         <Text style={styles.rotulo}>Duração</Text>
         <View style={styles.opcoes}>
           {DURACOES.map((d) => (
-            <Opcao key={d} texto={`${d} min`} selecionada={duracao === d} onPress={() => setDuracao(d)} />
+            <Opcao
+              key={d}
+              testID={`duracao-${d}`}
+              texto={`${d} min`}
+              selecionada={duracao === d}
+              onPress={() => setDuracao(d)}
+            />
           ))}
         </View>
 
+        {!!erro && (
+          <Text style={styles.erro} testID="mensagem-erro">
+            {erro}
+          </Text>
+        )}
+
         <TouchableOpacity
+          testID="botao-confirmar"
           style={[styles.botao, salvando && styles.botaoDesabilitado]}
           onPress={salvar}
           disabled={salvando}
@@ -231,9 +249,11 @@ export default function AgendarConsulta({ route, navigation }) {
   );
 }
 
-function Opcao({ texto, selecionada, onPress, desabilitada }) {
+function Opcao({ texto, selecionada, onPress, desabilitada, testID }) {
   return (
     <TouchableOpacity
+      testID={testID}
+      accessibilityState={{ selected: !!selecionada }}
       style={[styles.opcao, selecionada && styles.opcaoSelecionada, desabilitada && !selecionada && styles.opcaoApagada]}
       onPress={onPress}
       disabled={desabilitada}
@@ -294,5 +314,6 @@ const styles = StyleSheet.create({
     marginTop: espaco.lg,
   },
   botaoDesabilitado: { opacity: 0.6 },
+  erro: { color: cores.erro, marginTop: espaco.md },
   botaoTexto: { color: '#FFFFFF', fontWeight: '700', fontSize: 16 },
 });

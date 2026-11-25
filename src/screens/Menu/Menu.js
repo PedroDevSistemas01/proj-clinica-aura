@@ -83,7 +83,7 @@ export default function Menu({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-menu">
       <View style={styles.cabecalho}>
         <Text style={styles.titulo}>Clínica Aura</Text>
         <Text style={styles.subtitulo}>Agendamento de consultas</Text>
@@ -94,6 +94,7 @@ export default function Menu({ navigation }) {
         {OPCOES.map((opcao) => (
           <TouchableOpacity
             key={opcao.rota}
+            testID={`menu-${opcao.rota}`}
             style={styles.cartao}
             onPress={() => navigation.navigate(opcao.rota)}
           >
@@ -111,7 +112,7 @@ export default function Menu({ navigation }) {
               : `Avisos da clínica indisponíveis: ${avisos.motivo} O lembrete local continua valendo.`}
           </Text>
         )}
-        <TouchableOpacity style={styles.botaoSair} onPress={sair}>
+        <TouchableOpacity style={styles.botaoSair} onPress={sair} testID="botao-sair">
           <Text style={styles.botaoSairTexto}>Sair</Text>
         </TouchableOpacity>
       </View>

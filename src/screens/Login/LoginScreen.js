@@ -12,6 +12,7 @@ import {
 
 import { salvarToken, salvarUsuario } from '../../services/sessao';
 import { AUTH_BASE_URL } from '../../services/api';
+import { validarLogin } from '../../regras';
 import { cores, espaco } from '../../theme';
 import { rotasAposEntrar } from '../../services/navegacao';
 
@@ -40,8 +41,10 @@ export default function LoginScreen({ navigation }) {
 
     // Validação ANTES da rede: campo vazio não merece requisição — e a senha
     // não sai à toa pela rede (Passo 2, item 3).
-    if (!email.trim() || !senha) {
-      setErro('Preencha e-mail e senha.');
+    // Aula 14: a regra saiu do componente para src/regras.js (testável).
+    const problema = validarLogin(email, senha);
+    if (problema) {
+      setErro(problema);
       return;
     }
 
@@ -90,7 +93,7 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-login">
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -103,6 +106,7 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.grupo}>
           <Text style={styles.rotulo}>E-mail</Text>
           <TextInput
+            testID="campo-email"
             style={styles.campo}
             value={email}
             onChangeText={setEmail}
@@ -119,6 +123,7 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.grupo}>
           <Text style={styles.rotulo}>Senha</Text>
           <TextInput
+            testID="campo-senha"
             style={styles.campo}
             value={senha}
             onChangeText={setSenha}
@@ -132,9 +137,14 @@ export default function LoginScreen({ navigation }) {
           />
         </View>
 
-        {!!erro && <Text style={styles.erro}>{erro}</Text>}
+        {!!erro && (
+          <Text testID="mensagem-erro" style={styles.erro}>
+            {erro}
+          </Text>
+        )}
 
         <TouchableOpacity
+          testID="botao-entrar"
           style={[styles.botao, entrando && styles.botaoDesabilitado]}
           onPress={entrar}
           // Enquanto a requisição corre, o botão fica travado (Passo 2, item 7).

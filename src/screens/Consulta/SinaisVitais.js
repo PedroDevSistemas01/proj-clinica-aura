@@ -207,7 +207,7 @@ export default function SinaisVitais({ route, navigation }) {
   const media = mediaDasLeituras(leituras);
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-sinais-vitais">
       <KeyboardAvoidingView
         style={styles.tela}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -231,7 +231,7 @@ export default function SinaisVitais({ route, navigation }) {
 
           {/* Sempre visível: Bluetooth é atalho, a consulta não depende dele. */}
           {etapa !== ETAPA.MANUAL && (
-            <TouchableOpacity style={styles.link} onPress={digitarManualmente}>
+            <TouchableOpacity style={styles.link} onPress={digitarManualmente} testID="botao-digitar-manualmente">
               <Text style={styles.linkTexto}>Digitar os valores manualmente</Text>
             </TouchableOpacity>
           )}
@@ -251,6 +251,7 @@ export default function SinaisVitais({ route, navigation }) {
         {aparelhos.map((aparelho) => (
           <TouchableOpacity
             key={aparelho.id}
+            testID={`aparelho-${aparelho.id}`}
             style={styles.aparelho}
             onPress={() => conectar(aparelho)}
           >
@@ -265,14 +266,14 @@ export default function SinaisVitais({ route, navigation }) {
 
         {/* Lista vazia depois da busca é um resultado, e diz o que fazer. */}
         {!buscando && !aparelhos.length && !falha && (
-          <Text style={styles.aviso}>
+          <Text style={styles.aviso} testID="mensagem-sem-aparelhos">
             Nenhum aparelho encontrado. Ligue o medidor, coloque-o perto do celular (e em modo de
             pareamento, se ele tiver) e toque em "Procurar de novo". Se não der, digite os
             valores manualmente.
           </Text>
         )}
 
-        {falha && <Text style={styles.erro}>{falha.mensagem}</Text>}
+        {falha && <Text style={styles.erro} testID="mensagem-erro">{falha.mensagem}</Text>}
         {falha?.permissao && (
           <TouchableOpacity style={styles.botaoSecundario} onPress={() => Linking.openSettings()}>
             <Text style={styles.botaoSecundarioTexto}>Abrir os ajustes do aparelho</Text>
@@ -280,7 +281,7 @@ export default function SinaisVitais({ route, navigation }) {
         )}
 
         {!buscando && (
-          <TouchableOpacity style={styles.botaoSecundario} onPress={procurar}>
+          <TouchableOpacity style={styles.botaoSecundario} onPress={procurar} testID="botao-procurar">
             <Text style={styles.botaoSecundarioTexto}>Procurar de novo</Text>
           </TouchableOpacity>
         )}
@@ -300,10 +301,10 @@ export default function SinaisVitais({ route, navigation }) {
           </View>
         ) : (
           <>
-            <Text style={[styles.valorAoVivo, sinalPerdido && styles.valorVelho]}>
+            <Text style={[styles.valorAoVivo, sinalPerdido && styles.valorVelho]} testID="valor-ao-vivo">
               {ultima.bpm} <Text style={styles.unidade}>bpm</Text>
             </Text>
-            <Text style={styles.textoFraco}>
+            <Text style={styles.textoFraco} testID="status-leitura">
               {sinalPerdido
                 ? `Último valor recebido às ${formatarHora(ultima.em)}: não é atual.`
                 : 'Ao vivo'}
@@ -319,13 +320,13 @@ export default function SinaisVitais({ route, navigation }) {
         {/* Conexão perdida no meio: a tela percebe e avisa. */}
         {sinalPerdido && (
           <>
-            <Text style={styles.aviso}>
+            <Text style={styles.aviso} testID="aviso-sinal-perdido">
               {falha
                 ? `${falha.mensagem} `
                 : `Sem leituras há ${segundosSemLeitura} s: a conexão pode ter caído. `}
               Confira o aparelho e reconecte, ou importe a média do que já chegou.
             </Text>
-            <TouchableOpacity style={styles.botaoSecundario} onPress={reconectar}>
+            <TouchableOpacity style={styles.botaoSecundario} onPress={reconectar} testID="botao-reconectar">
               <Text style={styles.botaoSecundarioTexto}>Reconectar</Text>
             </TouchableOpacity>
           </>
