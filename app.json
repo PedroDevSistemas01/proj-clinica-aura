@@ -53,6 +53,12 @@
           "modes": [],
           "bluetoothAlwaysPermission": "A Clínica Aura usa o Bluetooth só para ler os sinais vitais de um aparelho de medição durante a pré-consulta."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0E5C63"
+        }
       ]
     ]
   }
