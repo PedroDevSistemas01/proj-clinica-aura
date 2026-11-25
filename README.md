@@ -17,6 +17,7 @@ Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 - expo-secure-store (cofre do SO para guardar o token de sessão)
 - expo-image-picker, expo-local-authentication e expo-location (Aula 6)
 - react-native-ble-plx + buffer (Aula 7; modo real exige development build)
+- expo-notifications (Aula 8: lembrete local; Aula 9: push)
 - @react-native-async-storage/async-storage (cache local de dados não sensíveis, ex.: coordenadas da clínica)
 - Serviços externos (Aula 5): ViaCEP (CEP) e Nominatim/OpenStreetMap (geocoding), sem chave
 - json-server como API mock de dados (porta 3000)
@@ -33,7 +34,7 @@ npm run api
 ```
 
 Teste no navegador: http://localhost:3000/medicos deve devolver a lista de médicos em JSON.
-Coleções disponíveis: `/medicos`, `/pacientes`, `/especialidades`, `/horarios`.
+Coleções disponíveis: `/medicos`, `/pacientes`, `/especialidades`, `/horarios`, `/sinaisVitais`, `/consultas`.
 
 ### Terminal 2 — API de autenticação (Node puro, porta 3001)
 
@@ -52,6 +53,7 @@ npx expo install expo-secure-store   # garante a versão compatível com o SDK
 npx expo install @react-native-async-storage/async-storage   # Aula 5: cache local
 npx expo install expo-image-picker expo-local-authentication expo-location   # Aula 6
 npx expo install react-native-ble-plx && npm install buffer   # Aula 7 (BLE real só em development build)
+npx expo install expo-notifications   # Aula 8
 npx expo start
 ```
 
@@ -196,6 +198,42 @@ ou EAS Build (`eas build --profile development --platform android`). Precisa de 
 3. Conecte, espere pelo menos 3 leituras e toque em "Importar média para o prontuário". Confira em http://localhost:3000/sinaisVitais.
 4. Saia da tela conectado e confira `[bluetooth simulado] desconectando` no Metro.
 
+## O que a Aula 8 entregou — lembrete local de consulta
+
+Branch `feat/aula8-notificacoes-locais`. Checklist, arguição e discussão sobre
+dose em [`docs/aula8-checklist-notificacoes.md`](docs/aula8-checklist-notificacoes.md).
+
+| Onde | O quê |
+| --- | --- |
+| `src/services/lembretes.js` | Único ponto que importa `expo-notifications`: `configurarHandler`, `prepararCanal` (Android, importância alta), `garantirPermissao`, `agendarLembrete` (1 h antes, gatilho de data, cancela o anterior antes), `cancelarLembrete`, `listarLembretesPendentes`, `sincronizarLembretes` (extensão) e os dois caminhos do toque |
+| AsyncStorage `clinica.lembretes` | Vínculo `consultaId → identificador da notificação`. Não é segredo, por isso não vai para o cofre |
+| `src/screens/Consulta/Consultas.js` | Lista de consultas; **Cancelar** faz `DELETE` e depois `cancelarLembrete`; "Lembretes pendentes" mostra o que o sistema tem agendado |
+| `src/screens/Consulta/AgendarConsulta.js` | Agendar e remarcar: grava na API **primeiro**, depois agenda o lembrete; mensagem honesta quando não haverá lembrete |
+| `src/screens/Consulta/DetalheConsulta.js` | Tela que o toque abre; recebe só o `consultaId` e busca o resto na API |
+| `src/services/navegacao.js` | Ref do `NavigationContainer` para navegar de fora das telas; destino pendente até a pessoa entrar |
+| `App.js` | `configurarHandler()` no topo do módulo, canal na inicialização, listener de toque removido no retorno do `useEffect`, `getLastNotificationResponseAsync` para o app fechado |
+| `db_clinica.json` | Coleção `consultas` (`pacienteId`, `medicoId`, `dataHora`, `duracaoMinutos`, `status`) |
+
+### Decisão sobre o texto do lembrete
+
+O lembrete aparece na tela bloqueada, à vista de quem estiver por perto.
+Decidimos que ele diz **só o horário**:
+
+> **Lembrete de consulta** — Você tem uma consulta hoje às 14:00.
+
+Sem nome do médico, sem especialidade e sem nome do paciente. "Consulta com
+o oncologista às 14h" revelaria um diagnóstico. Quem toca no aviso vê os
+detalhes dentro do app, depois de passar pelo login.
+
+### Como testar
+
+1. Em `src/services/lembretes.js`, troque `ANTECEDENCIA_TESTE_MINUTOS` para `1`.
+2. Consultas → + Agendar → escolha paciente e médico → "Teste: preencher com daqui a 3 minutos" → Agendar. A mensagem diz a hora do lembrete.
+3. "Lembretes pendentes" mostra 1. Remarque a mesma consulta: continua 1.
+4. Cancele a consulta: "Lembretes pendentes" mostra 0.
+5. Agende de novo, **feche o app por completo**, espere o lembrete e toque nele: o app abre na tela da consulta (depois da biometria, se houver sessão).
+6. Volte `ANTECEDENCIA_TESTE_MINUTOS` para `null`.
+
 ## Estrutura
 
 ```
@@ -209,6 +247,7 @@ proj-clinica-aura/
 ├── docs/decisoes/        -> registros de decisão arquitetural (ADR) dos serviços externos
 ├── docs/aula6-checklist-perifericos.md -> checklist, arguição e ética da Aula 6
 ├── docs/aula7-checklist-bluetooth.md -> checklist, falhas e arguição da Aula 7
+├── docs/aula8-checklist-notificacoes.md -> checklist, arguição e dose da Aula 8
 ├── tests/                -> testes de funções puras (npm test)
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
@@ -227,7 +266,11 @@ proj-clinica-aura/
     │   ├── localizacaoClinica.js -> coordenadas da clínica com cache
     │   ├── localizacao.js -> GPS do aparelho: permissão, leitura, Haversine
     │   ├── bluetooth.js  -> BLE: implementações simulada e real, mesma interface
-    │   └── frequenciaCardiaca.js -> decodificação pura do valor lido
+    │   ├── frequenciaCardiaca.js -> decodificação pura do valor lido
+    │   ├── lembretes.js  -> lembrete local de consulta (expo-notifications)
+    │   └── navegacao.js  -> ref de navegação + destino pendente do toque
+    ├── utils/
+    │   └── dataHora.js   -> formatar e montar data/hora (puro, testado)
     ├── components/
     │   ├── FotoPerfil.js -> foto de perfil (câmera/galeria), usada nos dois forms
     │   ├── MedicoForm.js
@@ -244,7 +287,11 @@ proj-clinica-aura/
         │   ├── Paciente.js
         │   └── CadastroEdicaoPacienteScreen.js
         ├── Clinica/ComoChegar.js
-        ├── Consulta/SinaisVitais.js
+        ├── Consulta/
+        │   ├── SinaisVitais.js
+        │   ├── Consultas.js
+        │   ├── AgendarConsulta.js
+        │   └── DetalheConsulta.js
         └── Sobre/SobreClinica.js
 ```
 
