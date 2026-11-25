@@ -15,7 +15,8 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 
 - [ ] **Chave do Google Maps (Aula 12, até 22/10/2026):** conta Google Cloud com faturamento, chave restrita ao pacote do app, guardada no `.env` (ADR 003).
 - [ ] **SMS (Aula 13):** aparelho com chip para testar o `expo-sms`; gateway (Zenvia ou Twilio) só se a clínica quiser confirmação automática (ADR 005).
-- [ ] **Revisão cruzada e Pull Requests:** as branches das Aulas 5 a 11 estão no GitHub (Aulas 8 a 11 empilhadas: `feat/aula8-notificacoes-locais` → `feat/aula9-push` → `feat/aula10-responsividade` → `feat/aula11-background`), mas nenhuma foi revisada nem integrada na `main`. Na revisão da Aula 8, conferir: nenhuma tela importa `expo-notifications`, cancelar a consulta cancela o lembrete e o texto não expõe dado sensível.
+- [x] ~~**Integração na `main`**~~: as Aulas 5 a 11 já estão na `main`. A Aula 11 entrou pelo PR #5 e levou junto as Aulas 8, 9 e 10, que estavam empilhadas nela.
+- [ ] **Revisão cruzada da Aula 8:** conferir que nenhuma tela importa `expo-notifications`, que cancelar a consulta cancela o lembrete e que o texto não expõe dado sensível.
 - [ ] **Nomes da squad:** o README e os ADRs ainda usam "Luiz" como responsável e têm placeholders de integrantes.
 
 ## Dívidas técnicas conscientes
