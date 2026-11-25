@@ -18,6 +18,7 @@ import Consultas from './src/screens/Consulta/Consultas';
 import AgendarConsulta from './src/screens/Consulta/AgendarConsulta';
 import DetalheConsulta from './src/screens/Consulta/DetalheConsulta';
 import SincronizarAgenda from './src/screens/Agenda/SincronizarAgenda';
+import HistoricoSincronizacao from './src/screens/Agenda/HistoricoSincronizacao';
 import { estaLogado } from './src/services/sessao';
 import {
   cancelarLembrete,
@@ -28,11 +29,17 @@ import {
 } from './src/services/lembretes';
 import { irParaDestino, navigationRef } from './src/services/navegacao';
 import { ouvirPushRecebido } from './src/services/push';
+import { definirTarefa } from './src/services/tarefaBackground';
 import { cores } from './src/theme';
 
 // Aula 8, Passo 2, item 4: o handler é configurado UMA vez, no topo do
 // módulo, antes de qualquer notificação chegar com o app aberto.
 configurarHandler();
+
+// Aula 11: a tarefa em background é definida no ESCOPO DO MÓDULO. Quando o
+// sistema acorda o app só para executá-la, nenhum componente é montado: um
+// defineTask dentro de useEffect nunca seria executado nesse cenário.
+definirTarefa();
 
 const Stack = createNativeStackNavigator();
 
@@ -113,6 +120,7 @@ export default function App() {
         <Stack.Screen name="AgendarConsulta" component={AgendarConsulta} options={{ title: 'Agendar consulta' }} />
         <Stack.Screen name="DetalheConsulta" component={DetalheConsulta} options={{ title: 'Consulta' }} />
         <Stack.Screen name="SincronizarAgenda" component={SincronizarAgenda} options={{ title: 'Conflitos da agenda' }} />
+        <Stack.Screen name="HistoricoSincronizacao" component={HistoricoSincronizacao} options={{ title: 'Sincronização' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

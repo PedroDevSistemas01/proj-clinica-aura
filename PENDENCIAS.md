@@ -1,4 +1,4 @@
-# Pendências do projeto (atualizado na Aula 10)
+# Pendências do projeto (atualizado na Aula 11)
 
 Lista única do que ficou em aberto até aqui. Cada item aponta onde está o detalhe.
 
@@ -7,6 +7,7 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [ ] **Bluetooth em modo real (Aula 7):** trocar `MODO_SIMULADO` para `false` em `src/services/bluetooth.js` e testar num development build (`npx expo run:android` ou EAS) com um medidor de frequência cardíaca de verdade. Detalhes: `docs/aula7-checklist-bluetooth.md`.
 - [ ] **Lembrete local no aparelho (Aula 8):** com `ANTECEDENCIA_TESTE_MINUTOS = 1`, conferir o disparo com o app fechado, o toque com o app fechado abrindo a consulta e a lista de pendentes vazia depois de cancelar. Detalhes: `docs/aula8-checklist-notificacoes.md`.
 - [ ] **Demonstrar a Aula 10 no aparelho:** indicador congelando no ingênuo e animando no fatiado, contador de toques subindo durante a verificação e as medições do celular na tabela de `docs/aula10-checklist-responsividade.md`.
+- [ ] **Tarefa em background no aparelho (Aula 11):** `BACKGROUND_REAL = true` em `src/services/tarefaBackground.js`, development build e conferir no histórico uma entrada com origem `background`. A primeira execução espontânea pode demorar horas. Roteiro: `docs/aula11-background.md`.
 - [ ] **Conferir câmera, biometria e GPS num celular (Aula 6):** os itens abertos estão em `docs/aula6-checklist-perifericos.md`.
 - [ ] **Development build para push (Aula 9):** conta Expo/EAS (`eas init` preenche `extra.eas.projectId`), `android.package` no `app.json`, projeto Firebase com credencial FCM V1 (`eas credentials`) e um aparelho Android (ADR 004). O mesmo build serve ao Bluetooth real. Sem isso o código está pronto, mas nenhum push foi recebido de verdade: só o envio com token inventado foi conferido (`HTTP 200` + `DeviceNotRegistered`). Roteiro: `docs/aula9-checklist-push.md`.
 
@@ -14,7 +15,7 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 
 - [ ] **Chave do Google Maps (Aula 12, até 22/10/2026):** conta Google Cloud com faturamento, chave restrita ao pacote do app, guardada no `.env` (ADR 003).
 - [ ] **SMS (Aula 13):** aparelho com chip para testar o `expo-sms`; gateway (Zenvia ou Twilio) só se a clínica quiser confirmação automática (ADR 005).
-- [ ] **Revisão cruzada e Pull Requests:** as branches das Aulas 5, 6 e 7 estão no GitHub, mas nenhuma foi revisada nem integrada na `main`.
+- [ ] **Revisão cruzada e Pull Requests:** as branches das Aulas 5 a 11 estão no GitHub (Aulas 8 a 11 empilhadas: `feat/aula8-notificacoes-locais` → `feat/aula9-push` → `feat/aula10-responsividade` → `feat/aula11-background`), mas nenhuma foi revisada nem integrada na `main`. Na revisão da Aula 8, conferir: nenhuma tela importa `expo-notifications`, cancelar a consulta cancela o lembrete e o texto não expõe dado sensível.
 - [ ] **Nomes da squad:** o README e os ADRs ainda usam "Luiz" como responsável e têm placeholders de integrantes.
 
 ## Dívidas técnicas conscientes
@@ -28,7 +29,9 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [ ] **Recibos lidos na hora (Aula 9):** o script espera 15 s; em produção os recibos devem ser lidos mais tarde, por uma tarefa agendada no servidor.
 - [ ] **Lembrete local com o app fechado (Aula 9):** o push de cancelamento apaga o lembrete local só com o app aberto ou depois do toque; com o app fechado ele ainda pode disparar.
 - [ ] **Verificação de conflitos no aparelho (Aula 10):** baixa a agenda inteira. A decisão é mover para o servidor quando houver API real (ADR 006); até lá, filtrar por médico/período na consulta.
-- [ ] **Última verificação não fica guardada (Aula 10):** a extensão "abrir instantânea com o valor anterior" fica para a Aula 11, que grava o resultado em disco.
+- [x] ~~**Última verificação não fica guardada (Aula 10)**~~: resolvido na Aula 11. A tela de Sincronização abre com o último resultado gravado em disco. A tela de conflitos da Aula 10 continua sem ele.
+- [ ] **Biblioteca de background do SDK 51 (Aula 11):** usamos `expo-background-fetch` porque o `expo-background-task` só existe no SDK 53+. Ao subir de SDK: trocar a biblioteca, mudar `minimumInterval` de segundos para minutos e usar o gatilho de teste dela. Atenção: no SDK 53+ o push deixa de funcionar no Expo Go no Android.
+- [ ] **Sincronização baixa tudo (Aula 11):** `GET /consultas` inteiro a cada execução. Em rede móvel isso custa ao usuário; filtrar por período quando a API permitir.
 - [ ] **Antecedência fixa (Aula 8):** 1 hora para todos. Extensões não feitas: paciente escolher (1 hora / 1 dia) e segundo lembrete na véspera.
 - [ ] **Data digitada à mão (Aula 8):** o agendamento usa campos DD/MM/AAAA e HH:MM; um seletor de data nativo exigiria mais uma biblioteca.
 - [ ] **Biometria ativa para todos:** oferecer como opção nos ajustes do app (extensão da Aula 6).

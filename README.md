@@ -17,7 +17,8 @@ Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 - expo-secure-store (cofre do SO para guardar o token de sessão)
 - expo-image-picker, expo-local-authentication e expo-location (Aula 6)
 - react-native-ble-plx + buffer (Aula 7; modo real exige development build)
-- expo-notifications (Aula 8: lembrete local; Aula 9: push)
+- expo-notifications (Aula 8: lembrete local; Aula 9: push) + expo-device (Aula 9)
+- expo-task-manager + expo-background-fetch (Aula 11; no SDK 53+ o substituto é o expo-background-task)
 - @react-native-async-storage/async-storage (cache local de dados não sensíveis, ex.: coordenadas da clínica)
 - Serviços externos (Aula 5): ViaCEP (CEP) e Nominatim/OpenStreetMap (geocoding), sem chave
 - json-server como API mock de dados (porta 3000)
@@ -55,6 +56,7 @@ npx expo install expo-image-picker expo-local-authentication expo-location   # A
 npx expo install react-native-ble-plx && npm install buffer   # Aula 7 (BLE real só em development build)
 npx expo install expo-notifications   # Aula 8
 npx expo install expo-device   # Aula 9 (push só em development build)
+npx expo install expo-task-manager expo-background-fetch   # Aula 11 (tarefa periódica só em development build)
 npx expo start
 ```
 
@@ -302,6 +304,25 @@ aparelho passasse de centenas de milissegundos (ex.: processar sinais vitais
 contínuos em tempo real). Não é o caso hoje: o otimizado leva 5 ms e o certo
 é mover a verificação para o servidor (ADR 006).
 
+## O que a Aula 11 entregou — sincronização em segundo plano
+
+Branch `feat/aula11-background`. Entregável, decisões, ética e roteiro de
+teste em [`docs/aula11-background.md`](docs/aula11-background.md).
+
+| Onde | O quê |
+| --- | --- |
+| `src/services/sincronizacao.js` | `sincronizarAgenda(origem)`: sem tela, sem `Alert`, sem navegação. Baixa `/consultas`, roda `detectarConflitos` (Aula 10) e `sincronizarLembretes` (Aula 8), grava o registro (data, origem, duração, resultado) com limite de 20. `precisaSincronizar`, preferência de ligar/desligar o background |
+| `src/hooks/useSincronizacao.js` | `AppState`: sincroniza ao **voltar** para o app (compara antes e depois), respeitando 15 min de intervalo |
+| `src/services/tarefaBackground.js` | Tarefa periódica com `expo-background-fetch` + `expo-task-manager` (SDK 51). `BACKGROUND_REAL` liga o modo real; `isTaskRegisteredAsync` antes de registrar; `minimumInterval` é um pedido |
+| `App.js` | `definirTarefa()` no **escopo do módulo**, nunca em `useEffect` |
+| `src/screens/Agenda/HistoricoSincronizacao.js` | "Última atualização: há N min", o que encontrou, puxar para atualizar (ignora o intervalo), chave para desligar o segundo plano e histórico |
+| `src/screens/Menu/Menu.js` | Registra a tarefa ao entrar, sincroniza ao voltar ao app, desregistra no logout |
+| `app.json` | `UIBackgroundModes: ["fetch"]` para o iOS |
+
+> **A tarefa periódica exige development build.** No Expo Go valem as portas
+> manual e "voltou ao app", que cobrem o caso mais comum. A tela nunca promete
+> "atualizado a cada 15 minutos": mostra há quanto tempo foi a última vez.
+
 ## Estrutura
 
 ```
@@ -318,6 +339,7 @@ proj-clinica-aura/
 ├── docs/aula8-checklist-notificacoes.md -> checklist, arguição e dose da Aula 8
 ├── docs/aula9-checklist-push.md -> push: entregável, falhas, ética e teste no aparelho
 ├── docs/aula10-checklist-responsividade.md -> medições, checklist e arguição da Aula 10
+├── docs/aula11-background.md -> sincronização em segundo plano: decisões, ética e teste
 ├── tests/                -> testes de funções puras (npm test)
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
@@ -343,9 +365,12 @@ proj-clinica-aura/
     │   ├── navegacao.js  -> ref de navegação + destino pendente do toque
     │   ├── push.js       -> token de push + registro do dispositivo na API
     │   ├── conflitos.js  -> verificação de conflitos (ingênua, otimizada, fatiada)
-    │   └── processamento.js -> cederAVez, fatias e cancelamento
+    │   ├── processamento.js -> cederAVez, fatias e cancelamento
+    │   ├── sincronizacao.js -> sincronizarAgenda(origem), com e sem tela
+    │   └── tarefaBackground.js -> tarefa periódica (development build)
     ├── hooks/
-    │   └── useTarefaPesada.js -> progresso + cancelamento para tarefa pesada
+    │   ├── useTarefaPesada.js -> progresso + cancelamento para tarefa pesada
+    │   └── useSincronizacao.js -> sincroniza ao voltar para o app (AppState)
     ├── utils/
     │   └── dataHora.js   -> formatar e montar data/hora (puro, testado)
     ├── components/
@@ -363,7 +388,9 @@ proj-clinica-aura/
         ├── Paciente/
         │   ├── Paciente.js
         │   └── CadastroEdicaoPacienteScreen.js
-        ├── Agenda/SincronizarAgenda.js
+        ├── Agenda/
+        │   ├── SincronizarAgenda.js
+        │   └── HistoricoSincronizacao.js
         ├── Clinica/ComoChegar.js
         ├── Consulta/
         │   ├── SinaisVitais.js
