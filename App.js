@@ -17,6 +17,7 @@ import SinaisVitais from './src/screens/Consulta/SinaisVitais';
 import Consultas from './src/screens/Consulta/Consultas';
 import AgendarConsulta from './src/screens/Consulta/AgendarConsulta';
 import DetalheConsulta from './src/screens/Consulta/DetalheConsulta';
+import SincronizarAgenda from './src/screens/Agenda/SincronizarAgenda';
 import { estaLogado } from './src/services/sessao';
 import {
   cancelarLembrete,
@@ -111,6 +112,7 @@ export default function App() {
         <Stack.Screen name="Consultas" component={Consultas} options={{ title: 'Consultas' }} />
         <Stack.Screen name="AgendarConsulta" component={AgendarConsulta} options={{ title: 'Agendar consulta' }} />
         <Stack.Screen name="DetalheConsulta" component={DetalheConsulta} options={{ title: 'Consulta' }} />
+        <Stack.Screen name="SincronizarAgenda" component={SincronizarAgenda} options={{ title: 'Conflitos da agenda' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
