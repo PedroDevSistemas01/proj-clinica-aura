@@ -26,7 +26,7 @@ Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 
 ## Como rodar
 
-A partir da Aula 4 são **três terminais**.
+A partir da Aula 4 são **três terminais**; para o SMS pelo servidor (Aula 13), **quatro**: suba também o gateway simulado com `npm run gateway` (porta 3002).
 
 ### Terminal 1 — API mock de dados (json-server, porta 3000)
 
@@ -57,6 +57,7 @@ npx expo install react-native-ble-plx && npm install buffer   # Aula 7 (BLE real
 npx expo install expo-notifications   # Aula 8
 npx expo install expo-device   # Aula 9 (push só em development build)
 npx expo install expo-task-manager expo-background-fetch   # Aula 11 (tarefa periódica só em development build)
+npx expo install expo-sms   # Aula 13 (envio pelo aparelho só em celular com chip)
 npx expo start
 ```
 
@@ -323,6 +324,25 @@ teste em [`docs/aula11-background.md`](docs/aula11-background.md).
 > manual e "voltou ao app", que cobrem o caso mais comum. A tela nunca promete
 > "atualizado a cada 15 minutos": mostra há quanto tempo foi a última vez.
 
+## O que a Aula 13 entregou — SMS e consolidação
+
+Branch `feat/aula13-sms`. Matriz de consolidação e regra dos três canais em
+[`docs/aula13-matriz-consolidacao.md`](docs/aula13-matriz-consolidacao.md);
+problemas do fluxo inteiro em [`docs/aula13-problemas-fluxo.md`](docs/aula13-problemas-fluxo.md).
+
+| Onde | O quê |
+| --- | --- |
+| `src/services/sms.js` | Dois caminhos explícitos: `pedirEnvioPeloAparelho` (confere `isAvailableAsync`, devolve o `result` sem tratá-lo como sucesso) e `pedirEnvioPeloServidor` (post na **nossa** API, nunca no gateway) |
+| `src/services/regrasSms.js` | Regras puras: `normalizarNumero` (+5516999998888 ou null), `contarSegmentos` (160/153 em GSM-7, 70/67 com acento), `avaliarTexto`, modelos sem acento e sem dado clínico |
+| `src/screens/Consulta/EnviarSms.js` | Recepção avisa o paciente: os dois botões com quem envia e quem paga, contador com destaque acima de 160, confirmação com o custo antes do envio pela clínica, "confira no seu app de mensagens" e "enfileirado" (não "enviado"/"entregue"), aviso sobre dado clínico |
+| `Consultas.js` / `DetalheConsulta.js` | Cancelar oferece o SMS de cancelamento; o detalhe oferece o de confirmação |
+| `servidor/auth-api.js` | `POST /sms` (com token): busca a consulta e o telefone **no servidor**, monta o texto padrão e chama o gateway com a chave que só ele conhece |
+| `servidor/gateway-sms.js` | Gateway **simulado** (porta 3002): exige `X-Api-Key`, recusa número fora do formato com 400, conta segmentos e custo, responde 202 e marca "entregue" depois |
+| `tests/regrasSms.test.mjs` | 160 × 161, acento × 70, normalização, modelos em um segmento |
+
+> O demo `A13_03_Demo_SMS` e o `gabarito_sms.js` não vieram no material; o
+> gateway foi escrito seguindo o comportamento descrito no roteiro.
+
 ## Estrutura
 
 ```
@@ -340,13 +360,16 @@ proj-clinica-aura/
 ├── docs/aula9-checklist-push.md -> push: entregável, falhas, ética e teste no aparelho
 ├── docs/aula10-checklist-responsividade.md -> medições, checklist e arguição da Aula 10
 ├── docs/aula11-background.md -> sincronização em segundo plano: decisões, ética e teste
+├── docs/aula13-matriz-consolidacao.md -> estado real de cada recurso e regra dos três canais
+├── docs/aula13-problemas-fluxo.md -> problemas do fluxo inteiro (entrada da Aula 14)
 ├── tests/                -> testes de funções puras (npm test)
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
 │   ├── auth-api.js       -> API de autenticação (Node puro, porta 3001)
 │   ├── enviar-push.js    -> envio de push pelo terminal (lotes, tickets, recibos)
-│   └── gerar-consultas.js -> volume de consultas para a Aula 10
+│   ├── gerar-consultas.js -> volume de consultas para a Aula 10
+│   └── gateway-sms.js    -> gateway de SMS simulado (porta 3002)
 └── src/
     ├── theme.js          -> cores e espaçamentos compartilhados
     ├── config/
@@ -367,7 +390,9 @@ proj-clinica-aura/
     │   ├── conflitos.js  -> verificação de conflitos (ingênua, otimizada, fatiada)
     │   ├── processamento.js -> cederAVez, fatias e cancelamento
     │   ├── sincronizacao.js -> sincronizarAgenda(origem), com e sem tela
-    │   └── tarefaBackground.js -> tarefa periódica (development build)
+    │   ├── tarefaBackground.js -> tarefa periódica (development build)
+    │   ├── sms.js        -> SMS pelo aparelho ou pelo servidor
+    │   └── regrasSms.js  -> número, segmentos e modelos de texto (puro)
     ├── hooks/
     │   ├── useTarefaPesada.js -> progresso + cancelamento para tarefa pesada
     │   └── useSincronizacao.js -> sincroniza ao voltar para o app (AppState)
@@ -396,7 +421,8 @@ proj-clinica-aura/
         │   ├── SinaisVitais.js
         │   ├── Consultas.js
         │   ├── AgendarConsulta.js
-        │   └── DetalheConsulta.js
+        │   ├── DetalheConsulta.js
+        │   └── EnviarSms.js
         └── Sobre/SobreClinica.js
 ```
 
