@@ -19,12 +19,14 @@ import AgendarConsulta from './src/screens/Consulta/AgendarConsulta';
 import DetalheConsulta from './src/screens/Consulta/DetalheConsulta';
 import { estaLogado } from './src/services/sessao';
 import {
+  cancelarLembrete,
   configurarHandler,
   obterToqueQueAbriuOApp,
   ouvirToqueNaNotificacao,
   prepararCanal,
 } from './src/services/lembretes';
 import { irParaDestino, navigationRef } from './src/services/navegacao';
+import { ouvirPushRecebido } from './src/services/push';
 import { cores } from './src/theme';
 
 // Aula 8, Passo 2, item 4: o handler é configurado UMA vez, no topo do
@@ -57,6 +59,18 @@ export default function App() {
       .catch(() => console.log('Não foi possível ler o toque que abriu o app.'));
 
     // Item 22: listener esquecido é vazamento.
+    return pararDeOuvir;
+  }, []);
+
+  // Aula 9: o servidor sabe o estado real da agenda. Se ele avisar que a
+  // consulta foi cancelada (pela recepção, por exemplo), o lembrete local
+  // daquela consulta deixa de existir.
+  useEffect(() => {
+    const pararDeOuvir = ouvirPushRecebido(({ tipo, consultaId }) => {
+      if (tipo === 'consulta-cancelada') {
+        cancelarLembrete(consultaId).catch(() => {});
+      }
+    });
     return pararDeOuvir;
   }, []);
 

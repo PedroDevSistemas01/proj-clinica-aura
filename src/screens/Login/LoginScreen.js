@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { salvarToken } from '../../services/sessao';
+import { salvarToken, salvarUsuario } from '../../services/sessao';
 import { cores, espaco } from '../../theme';
 import { rotasAposEntrar } from '../../services/navegacao';
 
@@ -66,6 +66,8 @@ export default function LoginScreen({ navigation }) {
       // Guarda o token pelo módulo de sessão — nenhuma tela fala com o
       // SecureStore direto (Passo 3, item 11).
       await salvarToken(dados.token);
+      // Aula 9: o dispositivo de push é vinculado a este usuário.
+      await salvarUsuario(dados.usuario);
 
       // A senha não precisa continuar na memória do app (Passo 2, item 6).
       setSenha('');

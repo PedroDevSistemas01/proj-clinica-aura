@@ -107,5 +107,6 @@
   "consultas": [
     { "id": "1", "pacienteId": 1, "medicoId": 1, "dataHora": "2026-12-01T13:00:00.000Z", "duracaoMinutos": 30, "status": "agendada" },
     { "id": "2", "pacienteId": 2, "medicoId": 4, "dataHora": "2026-12-02T17:30:00.000Z", "duracaoMinutos": 60, "status": "agendada" }
-  ]
+  ],
+  "dispositivos": []
 }

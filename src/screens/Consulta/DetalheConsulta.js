@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { cores, espaco } from '../../theme';
 import { get, SessaoExpirada } from '../../services/api';
+import { cancelarLembrete } from '../../services/lembretes';
 import { formatarDataHora } from '../../utils/dataHora';
 
 // Tela da consulta (Aula 8, Passo 4): é aqui que o toque no lembrete cai.
@@ -44,8 +45,11 @@ export default function DetalheConsulta({ route, navigation }) {
         return;
       }
       // 404: a consulta foi cancelada depois que o lembrete foi agendado.
+      // O lembrete local dela não tem mais razão de existir (Aula 9).
+      const naoExisteMais = e.message.includes('404');
+      if (naoExisteMais) cancelarLembrete(consultaId).catch(() => {});
       setErro(
-        e.message.includes('404')
+        naoExisteMais
           ? 'Esta consulta não existe mais. Ela pode ter sido cancelada pela clínica.'
           : `Não foi possível carregar a consulta. ${e.message}`
       );

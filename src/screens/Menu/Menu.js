@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { cores, espaco } from '../../theme';
 import { limparToken } from '../../services/sessao';
+import { desregistrarDispositivo, registrarDispositivo } from '../../services/push';
 
 // Menu principal do app. A partir daqui a squad chega nas telas
 // de Médicos e Pacientes, que consomem a API RESTful da clínica.
@@ -35,10 +36,27 @@ const OPCOES = [
 ];
 
 export default function Menu({ navigation }) {
+  // Aula 9: registra o dispositivo para push a cada abertura do app. O token
+  // muda (reinstalação, troca de aparelho), então registrar uma vez só não
+  // basta. Se o push estiver indisponível, o app segue normalmente.
+  const [avisos, setAvisos] = useState(null);
+
+  useEffect(() => {
+    let ativo = true;
+    registrarDispositivo().then((resultado) => {
+      if (ativo) setAvisos(resultado);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
   // Logout (Passo 5, item 23): apaga o token do cofre E volta para o Login.
   // As duas coisas, sempre — só navegar deixaria a sessão viva no cofre, e a
   // próxima pessoa que abrisse o aparelho entraria sem senha.
   async function sair() {
+    // Quem saiu não deve continuar recebendo avisos neste aparelho.
+    await desregistrarDispositivo();
     await limparToken();
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   }
@@ -64,6 +82,13 @@ export default function Menu({ navigation }) {
       </View>
 
       <View style={styles.rodape}>
+        {!!avisos && (
+          <Text style={styles.avisos}>
+            {avisos.registrado
+              ? 'Avisos da clínica ativos neste aparelho.'
+              : `Avisos da clínica indisponíveis: ${avisos.motivo} O lembrete local continua valendo.`}
+          </Text>
+        )}
         <TouchableOpacity style={styles.botaoSair} onPress={sair}>
           <Text style={styles.botaoSairTexto}>Sair</Text>
         </TouchableOpacity>
@@ -117,6 +142,12 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     paddingHorizontal: espaco.lg,
     paddingBottom: espaco.lg,
+  },
+  avisos: {
+    fontSize: 12,
+    color: cores.textoFraco,
+    textAlign: 'center',
+    marginBottom: espaco.sm,
   },
   botaoSair: {
     borderWidth: 1,
