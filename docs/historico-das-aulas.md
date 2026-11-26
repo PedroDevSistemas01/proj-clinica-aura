@@ -371,6 +371,15 @@ Os antigos testes em `node:test` (`tests/*.test.mjs`) foram convertidos para
 Jest e movidos para o lado dos arquivos testados. `npm run medir` (Aula 10)
 continua em `tests/medir-conflitos.mjs`.
 
+## Fechamento do projeto (26/11/2026)
+
+- **Tudo configurável pelo `.env`** (lido pelo `app.config.js` e por `src/config/ambiente.js`): endereço das APIs (`API_URL`, `AUTH_API_URL`), coordenadas da clínica, Firebase (`google-services.json`) e as chaves de teste `BLUETOOTH_REAL`, `BACKGROUND_REAL` e `LEMBRETE_TESTE_MINUTOS`, que antes exigiam editar o código.
+- **Foto de perfil fora do cache:** `src/services/fotos.js` copia a foto para o `documentDirectory`.
+- **SMS real opcional:** `SMS_PROVEDOR=simulado|twilio|zenvia` (`servidor/provedores-sms.js`); os servidores leem o `.env` (`servidor/carregar-env.js`).
+- **`expo-dev-client` instalado** e `eas.json` com um ambiente do EAS por perfil.
+- **Guias:** `docs/TESTES_APARELHO.md` (do clone ao teste de cada recurso no celular) e `docs/CONTAS_E_CHAVES.md` (o que criar em EAS, Firebase, Google Cloud e Twilio/Zenvia).
+- 101 testes no `npm test`.
+
 ## Estrutura
 
 ```

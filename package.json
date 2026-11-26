@@ -8,6 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "api": "json-server --watch db_clinica.json --port 3000",
+    "api:rede": "json-server --watch db_clinica.json --port 3000 --host 0.0.0.0",
     "auth-api": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON servidor/auth-api.js",
     "gateway": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON servidor/gateway-sms.js",
     "push": "node servidor/enviar-push.js",

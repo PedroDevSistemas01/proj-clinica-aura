@@ -32,6 +32,10 @@ O manual para quem usa o app (recepção) está em [`docs/manual-de-uso.md`](doc
 
 ### Passo a passo
 
+> Guia completo, do clone ao teste de cada recurso no celular:
+> **[docs/TESTES_APARELHO.md](docs/TESTES_APARELHO.md)**. Contas e chaves
+> (EAS, Firebase, Google Cloud, SMS): **[docs/CONTAS_E_CHAVES.md](docs/CONTAS_E_CHAVES.md)**.
+
 ```bash
 git clone https://github.com/PedroDevSistemas01/proj-clinica-aura.git
 cd proj-clinica-aura
@@ -194,12 +198,12 @@ chamam a biblioteca direto.
 
 Copie `.env.example` para `.env` e preencha. O `app.config.js` lê os valores
 de `process.env` (o Expo carrega o `.env` sozinho); no build da nuvem, os
-mesmos nomes vão como EAS Secrets (`eas secret:create --name <NOME> --value "..."`).
+mesmos nomes vão como variáveis do EAS (`eas env:create --name <NOME> --value "..."`; ver `docs/CONTAS_E_CHAVES.md`).
 
 ## Testes
 
 ```bash
-npm test                 # unidade e integração (Jest + Testing Library), 86 testes
+npm test                 # unidade e integração (Jest + Testing Library), 101 testes
 npm run test:coverage    # com cobertura
 ```
 
@@ -232,7 +236,7 @@ Perfis disponíveis em `eas.json`:
 
 | Perfil | Gera | Para quê |
 |---|---|---|
-| `development` | APK com o cliente de desenvolvimento embutido | Testar push, Bluetooth real e tarefa em background, que não rodam no Expo Go. Exige `npx expo install expo-dev-client` antes |
+| `development` | APK com o cliente de desenvolvimento embutido | Testar push, Bluetooth real e tarefa em background, que não rodam no Expo Go (`expo-dev-client` já instalado) |
 | `preview` | APK instalável direto, sem loja | Distribuir para a banca/colegas (o mais prático para a Aula 16) |
 | `production` | App Bundle (`.aab`) para a Play Store | Publicação. `autoIncrement` sobe o `versionCode` a cada build |
 
@@ -241,7 +245,7 @@ do Android (inteiro que a loja exige que sempre suba) é controlado pelo EAS
 (`"appVersionSource": "remote"` + `autoIncrement`); não edite à mão.
 
 **Pendências de build** (nenhum build foi gerado ainda):
-- conta EAS e `EAS_PROJECT_ID` no `.env` / EAS Secrets;
+- conta EAS e `EAS_PROJECT_ID` no `.env` / `eas env`;
 - confirmar o `ANDROID_PACKAGE` (não muda depois de publicar);
 - credencial FCM V1 (`eas credentials`) para o push;
 - `expo-dev-client` instalado para o perfil `development`;

@@ -5,7 +5,7 @@
 // Git). Os valores vêm de:
 //   - .env na máquina de quem desenvolve (fora do Git; modelo: .env.example).
 //     O Expo CLI carrega o .env sozinho antes de ler este arquivo;
-//   - EAS Secrets na nuvem, no build: eas secret:create --name <NOME> --value "..."
+//   - variáveis do EAS na nuvem, no build: eas env:create --name <NOME> --value "..."
 //
 // Variáveis lidas aqui (todas opcionais no laboratório):
 //   EAS_PROJECT_ID       -> projectId do EAS; sem ele o token de push falha (Aula 9)
