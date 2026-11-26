@@ -1,35 +1,55 @@
-// Testes das regras do SMS (Aula 13).
-// Rodar com: npm test
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
+// Unidade — regras do SMS (Aula 13). Aula 14, Passo 3, itens 14 e 15.
+import { avaliarTexto, contarSegmentos, montarTextoSms, normalizarNumero } from './regrasSms';
 
-import { avaliarTexto, contarSegmentos, montarTextoSms, normalizarNumero } from '../src/services/regrasSms.js';
+describe('contagem de segmentos', () => {
+  it('cabe em 1 segmento com exatamente 160 caracteres sem acento', () => {
+    expect(contarSegmentos('a'.repeat(160))).toBe(1);
+  });
 
-test('160 caracteres sem acento cabem em 1 segmento; 161 viram 2', () => {
-  assert.equal(contarSegmentos('a'.repeat(160)), 1);
-  assert.equal(contarSegmentos('a'.repeat(161)), 2);
+  it('vira 2 segmentos com 161 caracteres', () => {
+    expect(contarSegmentos('a'.repeat(161))).toBe(2);
+  });
+
+  it('cai para 70 caracteres por segmento quando há acento fora do GSM', () => {
+    expect(contarSegmentos('ã'.repeat(70))).toBe(1);
+    expect(contarSegmentos('ã'.repeat(71))).toBe(2);
+    expect(avaliarTexto('consulta às 14h, não esqueça').alerta).toMatch(/70/);
+  });
+
+  it('avisa quando o texto passa de um segmento', () => {
+    expect(avaliarTexto('a'.repeat(161)).alerta).toMatch(/2 SMS/);
+    expect(avaliarTexto('a'.repeat(160)).alerta).toBeNull();
+  });
 });
 
-test('acento fora do alfabeto GSM derruba o limite para 70', () => {
-  assert.equal(contarSegmentos('ã'.repeat(70)), 1);
-  assert.equal(contarSegmentos('ã'.repeat(71)), 2);
-  assert.match(avaliarTexto('consulta às 14h, não esqueça').alerta, /70/);
+describe('normalização do número', () => {
+  it('converte celular com máscara e sem DDI para o formato internacional', () => {
+    expect(normalizarNumero('(16) 98111-2233')).toBe('+5516981112233');
+  });
+
+  it('aceita o número que já vem com DDI, com ou sem o +', () => {
+    expect(normalizarNumero('+55 16 99999-8888')).toBe('+5516999998888');
+    expect(normalizarNumero('5516999998888')).toBe('+5516999998888');
+  });
+
+  it('aceita telefone fixo com DDD', () => {
+    expect(normalizarNumero('(16) 3333-0000')).toBe('+551633330000');
+  });
+
+  it('recusa número sem DDD, vazio ou ausente', () => {
+    expect(normalizarNumero('99998888')).toBeNull();
+    expect(normalizarNumero('')).toBeNull();
+    expect(normalizarNumero(null)).toBeNull();
+  });
 });
 
-test('normaliza celular com máscara, com e sem DDI; recusa o que não dá', () => {
-  assert.equal(normalizarNumero('(16) 98111-2233'), '+5516981112233');
-  assert.equal(normalizarNumero('+55 16 99999-8888'), '+5516999998888');
-  assert.equal(normalizarNumero('5516999998888'), '+5516999998888');
-  assert.equal(normalizarNumero('(16) 3333-0000'), '+551633330000');
-  assert.equal(normalizarNumero('99998888'), null);
-  assert.equal(normalizarNumero(''), null);
-  assert.equal(normalizarNumero(null), null);
-});
-
-test('os modelos não têm acento e cabem em um segmento', () => {
-  for (const tipo of ['lembrete', 'confirmacao', 'cancelamento']) {
-    const texto = montarTextoSms(tipo, '2026-12-01T13:00:00.000Z');
-    assert.equal(avaliarTexto(texto).codificacao, 'GSM-7', tipo);
-    assert.equal(contarSegmentos(texto), 1, tipo);
-  }
+describe('modelos de texto', () => {
+  it.each(['lembrete', 'confirmacao', 'cancelamento'])(
+    'o modelo de %s não tem acento e cabe em um segmento',
+    (tipo) => {
+      const texto = montarTextoSms(tipo, '2026-12-01T13:00:00.000Z');
+      expect(avaliarTexto(texto).codificacao).toBe('GSM-7');
+      expect(contarSegmentos(texto)).toBe(1);
+    }
+  );
 });
