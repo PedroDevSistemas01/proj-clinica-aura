@@ -182,7 +182,7 @@ Branch `feat/aula7-bluetooth`. Checklist, relato de falhas e arguição em
 | `src/screens/Consulta/SinaisVitais.js` | Procurando (lista sem repetição) → conectando (indicador) → conectado (valor ao vivo, contagem, média). Percebe conexão perdida, importa a média para `POST /sinaisVitais` pelo `api.js` e tem sempre o link "Digitar os valores manualmente" |
 | `src/screens/Paciente/Paciente.js` | Botão "Sinais vitais" no cartão de cada paciente |
 | `db_clinica.json` | Coleção `sinaisVitais` para o json-server aceitar a gravação |
-| `tests/frequenciaCardiaca.test.mjs` | 6 testes da decodificação: `npm test` (Node 22+) |
+| `src/services/frequenciaCardiaca.test.js` | 6 testes da decodificação: `npm test` (Jest desde a Aula 14) |
 
 ### Modo simulado × modo real
 
@@ -270,7 +270,7 @@ Decisão aparelho × servidor no [ADR 006](docs/decisoes/006-verificacao-de-conf
 | `src/services/processamento.js` | `cederAVez` (`setTimeout(0)`), `processarEmFatias`, `criarSinalDeCancelamento` |
 | `src/hooks/useTarefaPesada.js` | Estados rodando / progresso / resultado / erro; ref de "ainda montado"; cancela ao sair da tela |
 | `src/screens/Agenda/SincronizarAgenda.js` | Ingênuo bloqueante × fatiado lado a lado, barra de progresso, Cancelar, escolha da fatia e contador de toques |
-| `tests/conflitos.test.mjs` e `tests/medir-conflitos.mjs` | As três versões dão o mesmo resultado; `npm run medir` reproduz os números abaixo |
+| `src/services/conflitos.test.js` e `tests/medir-conflitos.mjs` | As três versões dão o mesmo resultado; `npm run medir` reproduz os números abaixo |
 
 ### Medições (Passos 2, 3 e 4)
 
@@ -338,10 +338,32 @@ problemas do fluxo inteiro em [`docs/aula13-problemas-fluxo.md`](docs/aula13-pro
 | `Consultas.js` / `DetalheConsulta.js` | Cancelar oferece o SMS de cancelamento; o detalhe oferece o de confirmação |
 | `servidor/auth-api.js` | `POST /sms` (com token): busca a consulta e o telefone **no servidor**, monta o texto padrão e chama o gateway com a chave que só ele conhece |
 | `servidor/gateway-sms.js` | Gateway **simulado** (porta 3002): exige `X-Api-Key`, recusa número fora do formato com 400, conta segmentos e custo, responde 202 e marca "entregue" depois |
-| `tests/regrasSms.test.mjs` | 160 × 161, acento × 70, normalização, modelos em um segmento |
+| `src/services/regrasSms.test.js` | 160 × 161, acento × 70, normalização, modelos em um segmento |
 
 > O demo `A13_03_Demo_SMS` e o `gabarito_sms.js` não vieram no material; o
 > gateway foi escrito seguindo o comportamento descrito no roteiro.
+
+## O que a Aula 14 entregou — testes
+
+Branch `feat/aula14-testes`. Plano de testes (fluxos críticos, pirâmide, o que
+não é coberto) em [`docs/aula14-plano-de-testes.md`](docs/aula14-plano-de-testes.md);
+bugs encontrados em [`docs/aula14-relatorio-de-bugs.md`](docs/aula14-relatorio-de-bugs.md).
+
+```bash
+npm test   # 17 arquivos, 86 testes; sem emulador, aparelho, servidor ou internet
+```
+
+| Onde | O quê |
+| --- | --- |
+| `jest.config.json`, `babel.config.js`, `jest.setup.js`, `jest.afterEnv.js` | Preset `jest-expo`, dublês comuns (AsyncStorage, cofre, notificações) e teto de espera de 5 s |
+| `src/test-utils.js` | `render`/`fireEvent` assíncronos (como na Testing Library 14), API falsa em memória, API fora do ar e `entrar()` |
+| `src/regras.js` | Validações que saíram dos componentes: login (e-mail válido, senha ≥ 6), médico, paciente, agendamento |
+| Telas | `testID` previsíveis: `campo-email`, `botao-entrar`, `mensagem-erro`, `tela-medicos`, `medico-{id}`, `consulta-{id}`... |
+| `*.test.js` ao lado de cada arquivo | Unidade das regras (fronteiras), falha de cada periférico (GPS, câmera, biometria, Bluetooth, notificação, API), login, agendamento, cancelamento e a jornada completa (`App.test.js`) |
+
+Os antigos testes em `node:test` (`tests/*.test.mjs`) foram convertidos para
+Jest e movidos para o lado dos arquivos testados. `npm run medir` (Aula 10)
+continua em `tests/medir-conflitos.mjs`.
 
 ## Estrutura
 
@@ -362,7 +384,10 @@ proj-clinica-aura/
 ├── docs/aula11-background.md -> sincronização em segundo plano: decisões, ética e teste
 ├── docs/aula13-matriz-consolidacao.md -> estado real de cada recurso e regra dos três canais
 ├── docs/aula13-problemas-fluxo.md -> problemas do fluxo inteiro (entrada da Aula 14)
-├── tests/                -> testes de funções puras (npm test)
+├── tests/medir-conflitos.mjs -> medição da Aula 10 (npm run medir)
+├── jest.config.json      -> Jest com o preset jest-expo (npm test)
+├── docs/aula14-plano-de-testes.md -> fluxos críticos, pirâmide e o que não é coberto
+├── docs/aula14-relatorio-de-bugs.md -> bugs encontrados pelos testes
 ├── package.json          -> dependências e scripts
 ├── assets/               -> ícones, imagens
 ├── servidor/
