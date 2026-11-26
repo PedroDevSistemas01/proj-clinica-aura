@@ -30,8 +30,8 @@ export { CANAL_LEMBRETES } from './lembretes';
 // Último token obtido nesta execução (usado para desregistrar no logout).
 let tokenAtual = null;
 
-// projectId do EAS: sem ele getExpoPushTokenAsync falha. Fica em app.json
-// (extra.eas.projectId), preenchido por `eas init`.
+// projectId do EAS: sem ele getExpoPushTokenAsync falha. Desde a Aula 15 vem
+// do app.config.js (extra.eas.projectId), que lê EAS_PROJECT_ID do .env.
 function obterProjectId() {
   return Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId ?? null;
 }
@@ -53,7 +53,7 @@ export async function obterTokenPush() {
 
   const projectId = obterProjectId();
   if (!projectId) {
-    return { token: null, motivo: 'Falta o projectId do EAS no app.json (rode `eas init`).' };
+    return { token: null, motivo: 'Falta o projectId do EAS (EAS_PROJECT_ID no .env; rode `eas init`).' };
   }
 
   try {

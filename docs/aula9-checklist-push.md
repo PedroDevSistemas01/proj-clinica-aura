@@ -58,8 +58,8 @@ Recusado no envio (DeviceNotRegistered) para ExponentPushToken[tokenInv...
 
 ## Como testar no aparelho (quando houver build)
 
-1. `npm install -g eas-cli`, `eas login` e `eas init` (preenche `extra.eas.projectId` no `app.json`).
-2. Definir `android.package` no `app.json`, criar o projeto Firebase e enviar a credencial FCM V1 com `eas credentials`.
+1. `npm install -g eas-cli`, `eas login` e `eas init` e coloque o `projectId` em `EAS_PROJECT_ID` no `.env` (desde a Aula 15 o `app.config.js` o lê de lá).
+2. Conferir o `ANDROID_PACKAGE` (padrão `com.clinicaaura.app` no `app.config.js`), criar o projeto Firebase e enviar a credencial FCM V1 com `eas credentials`.
 3. `eas build --profile development --platform android` (ou `npx expo run:android`) e instalar no celular.
 4. Subir `npm run api`, entrar no app e conferir no rodapé do Menu: "Avisos da clínica ativos".
 5. Pegar o token em http://localhost:3000/dispositivos e rodar `node servidor/enviar-push.js teste <token>` com o app fechado. Tocar no aviso: abre a consulta.

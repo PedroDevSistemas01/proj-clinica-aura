@@ -1,458 +1,273 @@
-# proj-clinica-aura
+# App Clínica — Clínica Aura (proj-clinica-aura)
 
-Aplicação mobile de agendamento de consultas para uma clínica médica.
-Projeto da Unidade Curricular **Aplicações Mobile**.
+Aplicativo de agendamento de consultas para uma clínica médica,
+desenvolvido na Unidade Curricular Aplicações Mobile (SENAI, 4º termo de
+Análise e Desenvolvimento de Sistemas).
 
 Repositório: https://github.com/PedroDevSistemas01/proj-clinica-aura
 
-## Sobre
+O que cada aula entregou está em [`docs/historico-das-aulas.md`](docs/historico-das-aulas.md).
+O que ainda está em aberto está em [`PENDENCIAS.md`](PENDENCIAS.md).
+O manual para quem usa o app (recepção) está em [`docs/manual-de-uso.md`](docs/manual-de-uso.md).
 
-- Consome uma API RESTful (pacientes, médicos, especialidades, horários, agendamento e cancelamento)
-- Integrará recursos nativos do dispositivo (câmera, Bluetooth, GPS, biometria) e de plataforma (notificações, mapas, SMS, processamento em segundo plano) ao longo do semestre
+## Sumário
 
-## Stack
-
-- React Native + Expo (SDK 51)
-- React Navigation (native-stack)
-- expo-secure-store (cofre do SO para guardar o token de sessão)
-- expo-image-picker, expo-local-authentication e expo-location (Aula 6)
-- react-native-ble-plx + buffer (Aula 7; modo real exige development build)
-- expo-notifications (Aula 8: lembrete local; Aula 9: push) + expo-device (Aula 9)
-- expo-task-manager + expo-background-fetch (Aula 11; no SDK 53+ o substituto é o expo-background-task)
-- @react-native-async-storage/async-storage (cache local de dados não sensíveis, ex.: coordenadas da clínica)
-- Serviços externos (Aula 5): ViaCEP (CEP) e Nominatim/OpenStreetMap (geocoding), sem chave
-- json-server como API mock de dados (porta 3000)
-- API de autenticação em Node puro (porta 3001), em `servidor/auth-api.js`
+- [Como rodar](#como-rodar)
+- [Arquitetura](#arquitetura)
+- [Telas](#telas)
+- [Serviços externos](#serviços-externos)
+- [Testes](#testes)
+- [Build de produção](#build-de-produção)
+- [Limitações conhecidas](#limitações-conhecidas)
+- [Equipe](#equipe)
 
 ## Como rodar
 
-A partir da Aula 4 são **três terminais**; para o SMS pelo servidor (Aula 13), **quatro**: suba também o gateway simulado com `npm run gateway` (porta 3002).
+### Pré-requisitos
 
-### Terminal 1 — API mock de dados (json-server, porta 3000)
+- Node.js 22 LTS ou mais novo (o `npm run medir` usa `--disable-warning`, que é do Node 22+)
+- npm 10 ou mais novo
+- **Expo Go** no celular (Android ou iOS), ou emulador Android/iOS. O projeto usa o **Expo SDK 51**: instale a versão do Expo Go compatível com o SDK 51
+- Opcional, só para os recursos que não rodam no Expo Go (push, Bluetooth real, tarefa em background): conta Expo/EAS e um aparelho Android para o *development build* (ver [Build de produção](#build-de-produção))
 
-```bash
-npm run api
-```
-
-Teste no navegador: http://localhost:3000/medicos deve devolver a lista de médicos em JSON.
-Coleções disponíveis: `/medicos`, `/pacientes`, `/especialidades`, `/horarios`, `/sinaisVitais`, `/consultas`.
-
-### Terminal 2 — API de autenticação (Node puro, porta 3001)
+### Passo a passo
 
 ```bash
-npm run auth-api
-```
-
-Teste no navegador: http://localhost:3001/medicos deve responder **401** (rota protegida — é o esperado). O login é em `POST /login`, então não dá para testar pela barra de endereços.
-Usuários de teste: `recepcao@clinica.com / clinica123` e `joao@clinica.com / medico123`.
-
-### Terminal 3 — App
-
-```bash
+git clone https://github.com/PedroDevSistemas01/proj-clinica-aura.git
+cd proj-clinica-aura
 npm install
-npx expo install expo-secure-store   # garante a versão compatível com o SDK
-npx expo install @react-native-async-storage/async-storage   # Aula 5: cache local
-npx expo install expo-image-picker expo-local-authentication expo-location   # Aula 6
-npx expo install react-native-ble-plx && npm install buffer   # Aula 7 (BLE real só em development build)
-npx expo install expo-notifications   # Aula 8
-npx expo install expo-device   # Aula 9 (push só em development build)
-npx expo install expo-task-manager expo-background-fetch   # Aula 11 (tarefa periódica só em development build)
-npx expo install expo-sms   # Aula 13 (envio pelo aparelho só em celular com chip)
+```
+
+O app conversa com **três servidores locais**, cada um num terminal separado,
+todos a partir da pasta do projeto:
+
+| Terminal | Comando | Porta | Para quê |
+|---|---|---|---|
+| 1 | `npm run api` | 3000 | API mock de dados (json-server sobre `db_clinica.json`): médicos, pacientes, consultas, sinais vitais, dispositivos |
+| 2 | `npm run auth-api` | 3001 | API de autenticação (`POST /login`) e pedido de SMS (`POST /sms`) |
+| 3 | `npm run gateway` | 3002 | Gateway de SMS **simulado** (nenhuma mensagem sai de verdade). Só precisa estar no ar para "Enviar pela clínica" |
+
+Confira no navegador: http://localhost:3000/medicos deve devolver uma lista
+em JSON; http://localhost:3001/medicos deve responder **401** (rota protegida,
+é o esperado).
+
+Configure o endereço das APIs em **um arquivo só**, `src/services/api.js`:
+
+```js
+// src/services/api.js: troque pelo IP da máquina que roda as APIs
+export const BASE_URL = 'http://192.168.x.x:3000';      // json-server
+export const AUTH_BASE_URL = 'http://192.168.x.x:3001'; // autenticação e SMS
+```
+
+**Por que `localhost` não funciona em celular físico:** dentro do celular,
+`localhost` é o próprio celular, e as APIs estão rodando no computador. Use o
+IP do computador na rede Wi-Fi (no Windows, `ipconfig` → "Endereço IPv4"), com
+o celular **na mesma rede**. No emulador Android, use `http://10.0.2.2`, que é
+o apelido do computador visto de dentro do emulador. No navegador do próprio
+computador, `localhost` funciona.
+
+Rode o app (quarto terminal):
+
+```bash
 npx expo start
 ```
 
-Escaneie o QR code com o app **Expo Go** no celular.
+Leia o QR code com o Expo Go. Não rode no navegador (`--web`): o cofre do
+token (`expo-secure-store`) não existe lá.
 
-> **`expo-secure-store` não funciona no navegador (target web).** Rode em emulador ou celular físico. Se abrir no `--web`, o erro vem do cofre, não do código.
-
-### Ajuste dos endereços (Aula 4 em diante)
-
-Desde a Aula 4 o app não fala com a rede espalhado por várias telas. Só **dois**
-lugares têm endereço:
-
-- `src/services/api.js` → `BASE_URL` — o cliente único, usado por todas as telas de dados.
-- `src/screens/Login/LoginScreen.js` → `AUTH_URL` — usado só pelo login (`POST /login`), **sempre na porta 3001** (o json-server não tem `/login`).
-
-| Onde você está testando | host a usar |
-| --- | --- |
-| Emulador Android | `http://10.0.2.2` |
-| Celular físico com Expo Go | `http://SEU_IP_LOCAL` (ex.: `http://192.168.0.15`) |
-
-Descubra seu IP com `ipconfig` (Windows) ou `ifconfig` (Linux/macOS). O celular precisa estar na mesma rede Wi-Fi da máquina. Troque o host mantendo a porta (`3000` no `api.js`, `3001` no `LoginScreen.js`).
-
-## O que a Aula 3 entregou
-
-| Passo | Onde | O quê |
-| --- | --- | --- |
-| 2 | `Medico.js` | `GET /medicos` com `fetch`, estados `carregando` / `erro` / dados, botão "Tentar novamente", busca e agrupamento por letra na `SectionList` |
-| 3 | `Paciente.js` | `GET /pacientes` no mesmo padrão, com `FlatList` |
-| 4 | `CadastroEdicaoMedicoScreen.js` + `MedicoForm.js` | `POST /medicos` no cadastro, `PUT /medicos/:id` na edição, checagem de `resposta.ok`, estado `salvando` travando o botão, Alert de sucesso só depois da confirmação do servidor |
-| 5 | `Medico.js` | `DELETE /medicos/:id` com `Alert.alert` de confirmação e recarga da lista; `useFocusEffect` no lugar do `useEffect` |
-| 7 | `Paciente.js`, `CadastroEdicaoPacienteScreen.js`, `PacienteForm.js` | Mesmo padrão de escrita aplicado aos endpoints `/pacientes` |
-
-## O que a Aula 4 entregou
-
-| Passo | Onde | O quê |
-| --- | --- | --- |
-| 2 | `src/screens/Login/LoginScreen.js` | Tela de login: `POST /login`, validação antes do envio, `secureTextEntry`, `autoCapitalize="none"`, 401 tratado à parte, estado `entrando` travando o botão, `navigation.reset` no sucesso |
-| 3 | `src/services/sessao.js` | Módulo de sessão: `salvarToken` / `obterToken` / `limparToken` / `estaLogado`. Único ponto que fala com o `expo-secure-store`; chave `clinica.token`; leitura protegida por try/catch |
-| 4 | `src/services/api.js` | Cliente HTTP único: monta `Authorization: Bearer` sozinho, `Content-Type` só quando há corpo, trata o 401 uma vez (limpa o cofre + lança `SessaoExpirada`), devolve `null` no 204; atalhos `get` / `post` / `put` / `remover` |
-| 4 | `Medico.js`, `Paciente.js`, `CadastroEdicaoMedicoScreen.js`, `CadastroEdicaoPacienteScreen.js` | Reescritas para usar os atalhos do `api.js`: sumiram `BASE_URL`, `fetch` cru e a checagem repetida de `resposta.ok` |
-| 5 | `App.js` | Estado `logado` (null = verificando) preenchido por `estaLogado()`; `ActivityIndicator` durante a checagem; `initialRouteName` conforme a sessão; rota `Login` com `headerShown: false` |
-| 5 | `Menu.js` | Botão **Sair**: `limparToken()` + `navigation.reset` para o Login (apagar e navegar, as duas coisas) |
-
-## Segurança (Aula 4)
-
-- **HTTP × HTTPS:** o mock local roda em **HTTP** porque o tráfego não sai da máquina — decisão consciente de laboratório, não descuido. A API real da clínica exigirá **HTTPS**: para o app, muda uma letra no `BASE_URL` (`http://` → `https://`); o resto é do servidor (certificado válido, domínio, renovação). iOS e Android já bloqueiam HTTP puro em produção por padrão.
-- **Porta do cliente de dados (`api.js`):** usamos **`http://localhost:3000`** (json-server), para o CRUD da Aula 3 continuar funcionando. Esse mock **não valida** o token — o header vai junto, mas é ignorado. A API de autenticação (3001) valida o token de verdade, mas só expõe `GET /medicos` e `GET /perfil`. O padrão de enviar o token já fica pronto para a API real. Para ver o 401 acontecendo no app, troque o `BASE_URL` para `http://localhost:3001` (nesse modo, só a lista de médicos responde).
-- **Login:** sempre em `http://localhost:3001/login`.
-- **Senha:** não fica guardada em lugar nenhum depois do login — o `LoginScreen` limpa o campo (`setSenha('')`). O app precisa do token, não da senha.
-- **Logs:** nenhum `console.log` imprime token, senha ou dado de paciente.
-
-## O que a Aula 5 entregou — Web Services de terceiros
-
-A partir daqui o app também fala com servidores que **não são nossos**. Por isso
-existem dois clientes HTTP separados, de propósito:
-
-| Cliente | Fala com | Envia o token da clínica? |
-| --- | --- | --- |
-| `src/services/api.js` | a nossa API (json-server / API real) | Sim |
-| `src/services/httpExterno.js` | ViaCEP, Nominatim e futuros terceiros | **Nunca** (seria vazar credencial) |
-
-| Passo | Onde | O quê |
-| --- | --- | --- |
-| 1 | `docs/decisoes/000-mapa-dependencias-externas.md` | Mapa de tudo que depende de terceiros (CEP, geocoding, mapas, push, SMS), com opções e o que acontece se cada serviço cair |
-| 2 | `docs/decisoes/001` a `005` | Um ADR por serviço: contexto, opções, decisão, consequências, plano B e sinais de que deu errado |
-| 3 | `src/services/httpExterno.js` | `buscarExterno(nomeServico, url, opcoes)`: timeout de 8 s com `AbortController` ("tempo esgotado" em vez de `AbortError`), header `User-Agent`, `resposta.ok` conferido antes do `.json()`, 429 com mensagem própria, erro `ServicoExternoIndisponivel` com o nome do serviço |
-| 4A | `src/services/viacep.js` + `PacienteForm.js` | CEP no cadastro do paciente: validação local de 8 dígitos, consulta no `onBlur` (não a cada tecla), trata `200 + erro:"true"`, tradução `localidade → cidade`, indicador durante a consulta, **aviso** (não erro) se falhar, campos sempre editáveis |
-| 4B | `src/services/geocoding.js` + `localizacaoClinica.js` + `screens/Sobre/SobreClinica.js` | Coordenadas da clínica pelo Nominatim: `User-Agent`, 1 req/s garantido por fila (sem `Promise.all`), lista vazia tratada, cache em AsyncStorage, crédito visível ao OpenStreetMap, botão "Abrir no app de mapas" como plano B |
-| 5 | `.env.example` / `.gitignore` | Nenhuma chave no código. `.env` fora do Git; `.env.example` versionado sem valores |
-
-### Como testar (precisa de internet)
-
-1. **Pacientes → + → campo CEP:** digite `13560-042` e toque fora do campo. Logradouro, bairro, cidade e UF são preenchidos e continuam editáveis.
-2. `99999999` → aviso "CEP não encontrado", cadastro continua possível.
-3. Desligue o Wi-Fi e repita → aviso de "Sem conexão com ViaCEP", cadastro continua possível.
-4. **Menu → Sobre a clínica:** latitude/longitude aparecem ("Consultado agora"). Feche e abra de novo: "Guardado neste aparelho", sem nova chamada ao Nominatim.
-5. Para ver o timeout: troque `TIMEOUT_MS` em `httpExterno.js` para `1` e recarregue. Volte para `8000`.
-
-> A consulta de CEP e o geocoding usam HTTPS e não dependem do json-server:
-> funcionam mesmo com os Terminais 1 e 2 desligados.
-
-### Providências para as próximas aulas (ver ADRs)
-
-- [ ] **Aula 7/9:** aparelho Android para *development build* (push não funciona no Expo Go no Android a partir do SDK 53) + conta Expo/EAS + projeto Firebase (ADR 004).
-- [ ] **Aula 12 (22/10):** conta Google Cloud com faturamento, chave do Maps SDK for Android restrita ao pacote do app, no `.env` (ADR 003).
-- [ ] **Aula 13:** aparelho com chip para testar `expo-sms`; comparar plano de teste Zenvia × Twilio caso a clínica queira confirmação automática (ADR 005).
-
-## O que a Aula 6 entregou — câmera, biometria e GPS
-
-Três frentes independentes, cada uma na sua branch, integradas em
-`feat/aula6-integracao`. Checklist de fechamento, respostas da arguição e
-discussão ética em [`docs/aula6-checklist-perifericos.md`](docs/aula6-checklist-perifericos.md).
-
-| Frente | Branch | Onde | O quê |
-| --- | --- | --- | --- |
-| Bibliotecas | `feat/aula6-base` | `package.json`, `app.json` | `expo-image-picker`, `expo-local-authentication`, `expo-location` via `npx expo install`; textos de permissão em português no `app.json` |
-| Foto de perfil | `feat/aula6-foto-perfil` | `src/components/FotoPerfil.js`, `MedicoForm.js`, `PacienteForm.js` | Um componente para os dois cadastros: explica antes de pedir a câmera, trata negada e bloqueada (ajustes), `canceled` tratado, `aspect [1,1]` e `quality 0.6`, galeria como alternativa, foto opcional, `fotoUri` enviada com o formulário |
-| Login biométrico | `feat/aula6-login-biometrico` | `src/screens/Login/LoginBiometrico.js`, `App.js` | Quem já tem token abre nesta tela. Confere sensor, biometria cadastrada e token; mensagem diferente para cada falta; `user_cancel` tratado; "Entrar com e-mail e senha" sempre visível. **A biometria destranca o token do cofre, não autentica na API** |
-| Como chegar | `feat/aula6-como-chegar` | `src/services/localizacao.js`, `src/screens/Clinica/ComoChegar.js` | Único ponto do `expo-location`; permissão só em primeiro plano; `PermissaoNegada` com `canAskAgain`; `Accuracy.Balanced`; Haversine; distância, tempo estimado e precisão; endereço sempre visível; última posição conhecida para abrir rápido |
-
-### Como testar (aparelho físico)
-
-O emulador não serve para um teste honesto destes três recursos.
-
-1. **Foto:** Médicos → + → toque no avatar → "Tirar foto". Negue a câmera uma vez (aparece a explicação) e salve sem foto (funciona). Edite o médico: a foto continua lá.
-2. **Biometria:** faça login com senha, feche o app e abra de novo. Aparece "Entrar com digital". Cancele (volta para o login com senha, sem erro). Em aparelho sem digital cadastrada, a tela explica isso.
-3. **Como chegar:** Menu → Como chegar → "Usar minha localização". Negue duas vezes e reabra a tela: aparece "Abrir os ajustes do aparelho", e o endereço continua visível.
-
-> **Pendência consciente:** a foto é só a URI do cache do aparelho (some se o
-> cache for limpo) e as coordenadas da clínica estão em `src/config/clinica.js`.
-> Ver a lista completa no checklist.
-
-## O que a Aula 7 entregou — sinais vitais via Bluetooth (BLE)
-
-Branch `feat/aula7-bluetooth`. Checklist, relato de falhas e arguição em
-[`docs/aula7-checklist-bluetooth.md`](docs/aula7-checklist-bluetooth.md).
-
-| Onde | O quê |
-| --- | --- |
-| `src/services/bluetooth.js` | Duas implementações com a mesma interface (`procurar`, `pararBusca`, `conectar`, `monitorarFrequencia`, `desconectar`). `MODO_SIMULADO` é o único ponto que escolhe. O real carrega `react-native-ble-plx` só dentro de `criarServicoBleReal()`, chama `discoverAllServicesAndCharacteristics()` após conectar e pede permissões conforme `Platform.Version` |
-| `src/services/frequenciaCardiaca.js` | `decodificarFrequencia()` pura (8 ou 16 bits, conforme a flag), faixa plausível e média |
-| `src/screens/Consulta/SinaisVitais.js` | Procurando (lista sem repetição) → conectando (indicador) → conectado (valor ao vivo, contagem, média). Percebe conexão perdida, importa a média para `POST /sinaisVitais` pelo `api.js` e tem sempre o link "Digitar os valores manualmente" |
-| `src/screens/Paciente/Paciente.js` | Botão "Sinais vitais" no cartão de cada paciente |
-| `db_clinica.json` | Coleção `sinaisVitais` para o json-server aceitar a gravação |
-| `src/services/frequenciaCardiaca.test.js` | 6 testes da decodificação: `npm test` (Jest desde a Aula 14) |
-
-### Modo simulado × modo real
-
-- **Simulado (padrão, `MODO_SIMULADO = true`):** roda no **Expo Go**. Dois aparelhos falsos aparecem com atraso e enviam de 60 a 100 bpm a cada 1,5 s. Para provocar falhas, ligue uma chave por vez em `SIMULACAO` (`semAparelhos`, `falharAoConectar`, `perderConexaoAposLeituras`).
-- **Real (`MODO_SIMULADO = false`):** **não funciona no Expo Go**. O `react-native-ble-plx` tem código nativo e exige *development build*:
+Opcional:
 
 ```bash
-npx expo run:android
+npm run gerar-consultas -- 3000   # 2 a 5 mil consultas para a tela de conflitos (Aula 10); pare o json-server antes
+npm run gerar-consultas -- limpar # remove só as consultas geradas
+npm run push -- teste <token>     # envia um push de teste (só com development build)
+npm run medir                     # mede as versões da verificação de conflitos
 ```
 
-ou EAS Build (`eas build --profile development --platform android`). Precisa de um medidor que use o perfil padrão de frequência cardíaca (cinta cardíaca, oxímetro, relógio esportivo).
+### Credenciais de teste
 
-### Como testar
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Recepção | `recepcao@clinica.com` | `clinica123` |
+| Médico | `joao@clinica.com` | `medico123` |
 
-1. Suba o json-server (`npm run api`) e entre no app.
-2. Pacientes → "Sinais vitais" no cartão de um paciente. A busca encontra os dois aparelhos simulados e termina sozinha.
-3. Conecte, espere pelo menos 3 leituras e toque em "Importar média para o prontuário". Confira em http://localhost:3000/sinaisVitais.
-4. Saia da tela conectado e confira `[bluetooth simulado] desconectando` no Metro.
+São contas de laboratório, escritas em `servidor/auth-api.js`. A API guarda
+as sessões em memória: reiniciá-la desloga todo mundo.
 
-## O que a Aula 8 entregou — lembrete local de consulta
+## Arquitetura
 
-Branch `feat/aula8-notificacoes-locais`. Checklist, arguição e discussão sobre
-dose em [`docs/aula8-checklist-notificacoes.md`](docs/aula8-checklist-notificacoes.md).
+### Estrutura de pastas
 
-| Onde | O quê |
-| --- | --- |
-| `src/services/lembretes.js` | Único ponto que importa `expo-notifications`: `configurarHandler`, `prepararCanal` (Android, importância alta), `garantirPermissao`, `agendarLembrete` (1 h antes, gatilho de data, cancela o anterior antes), `cancelarLembrete`, `listarLembretesPendentes`, `sincronizarLembretes` (extensão) e os dois caminhos do toque |
-| AsyncStorage `clinica.lembretes` | Vínculo `consultaId → identificador da notificação`. Não é segredo, por isso não vai para o cofre |
-| `src/screens/Consulta/Consultas.js` | Lista de consultas; **Cancelar** faz `DELETE` e depois `cancelarLembrete`; "Lembretes pendentes" mostra o que o sistema tem agendado |
-| `src/screens/Consulta/AgendarConsulta.js` | Agendar e remarcar: grava na API **primeiro**, depois agenda o lembrete; mensagem honesta quando não haverá lembrete |
-| `src/screens/Consulta/DetalheConsulta.js` | Tela que o toque abre; recebe só o `consultaId` e busca o resto na API |
-| `src/services/navegacao.js` | Ref do `NavigationContainer` para navegar de fora das telas; destino pendente até a pessoa entrar |
-| `App.js` | `configurarHandler()` no topo do módulo, canal na inicialização, listener de toque removido no retorno do `useEffect`, `getLastNotificationResponseAsync` para o app fechado |
-| `db_clinica.json` | Coleção `consultas` (`pacienteId`, `medicoId`, `dataHora`, `duracaoMinutos`, `status`) |
+```
+App.js                -> verifica a sessão, registra handler/tarefa e declara as rotas
+app.config.js         -> configuração do Expo (lê chaves do .env; substitui o app.json)
+eas.json              -> perfis de build (development, preview, production)
+db_clinica.json       -> base do json-server
+servidor/             -> auth-api.js, gateway-sms.js, enviar-push.js, gerar-consultas.js
+docs/                 -> decisões (ADR), checklists por aula, plano de testes, manual de uso
+src/
+  components/   formulários de médico e paciente e o campo de foto de perfil
+  screens/      uma pasta por área (Login, Menu, Medico, Paciente, Consulta, Agenda, Clinica, Sobre)
+  services/     tudo que fala com rede, disco, hardware ou sistema operacional (ver abaixo)
+  hooks/        useTarefaPesada (progresso + cancelamento) e useSincronizacao (AppState)
+  utils/        dataHora.js (formatar e montar datas)
+  config/       dados institucionais da clínica (endereço, telefone, coordenadas)
+  regras.js     validações puras (login, médico, paciente, agendamento)
+  theme.js      cores e espaçamentos
+  test-utils.js utilidades dos testes (API falsa, login)
+```
 
-### Decisão sobre o texto do lembrete
+### Camada de serviços
 
-O lembrete aparece na tela bloqueada, à vista de quem estiver por perto.
-Decidimos que ele diz **só o horário**:
+| Arquivo | Responsabilidade |
+|---|---|
+| `services/api.js` | Cliente HTTP único da API da clínica: monta o header `Authorization: Bearer`, trata o 401 (limpa o cofre e lança `SessaoExpirada`), `get`/`post`/`put`/`remover` |
+| `services/sessao.js` | Token e usuário logado no cofre do sistema (`expo-secure-store`) |
+| `services/httpExterno.js` | Serviços de terceiros (ViaCEP, Nominatim): timeout de 8 s, `User-Agent`, 429; **nunca** leva o token da clínica |
+| `services/viacep.js`, `geocoding.js`, `localizacaoClinica.js` | CEP, coordenadas da clínica (1 req/s) e cache |
+| `services/localizacao.js` | GPS: permissão, posição, Haversine, tempo estimado |
+| `services/bluetooth.js`, `frequenciaCardiaca.js` | BLE com implementação simulada e real (mesma interface) e decodificação pura |
+| `services/lembretes.js` | Único ponto do `expo-notifications`: lembrete local 1 h antes, vínculo consulta → notificação no AsyncStorage, toque |
+| `services/push.js` | Token de push e registro do dispositivo na API |
+| `services/navegacao.js` | Navegar de fora das telas (toque na notificação) sem furar o login |
+| `services/conflitos.js`, `processamento.js` | Conflitos da agenda (ingênuo, otimizado e fatiado) e `cederAVez` |
+| `services/sincronizacao.js`, `tarefaBackground.js` | `sincronizarAgenda(origem)` sem tela; tarefa periódica |
+| `services/sms.js`, `regrasSms.js` | SMS pelo aparelho ou pelo servidor; número, segmentos e modelos de texto |
 
-> **Lembrete de consulta** — Você tem uma consulta hoje às 14:00.
+**Por que os periféricos ficam atrás de serviços:** a tela só conhece a
+interface do service, nunca a biblioteca. Isso deixou o Bluetooth rodar em
+modo simulado no Expo Go (sem hardware) e tornou possíveis os testes de
+falha da Aula 14: o service é trocado por um dublê que nega o GPS, não
+encontra aparelho ou fica sem rede, e a tela nem percebe. Duas exceções
+conhecidas: `FotoPerfil` (câmera) e `LoginBiometrico` (biometria) ainda
+chamam a biblioteca direto.
 
-Sem nome do médico, sem especialidade e sem nome do paciente. "Consulta com
-o oncologista às 14h" revelaria um diagnóstico. Quem toca no aviso vê os
-detalhes dentro do app, depois de passar pelo login.
+### Decisões arquiteturais
 
-### Como testar
+| # | Decisão | Registro |
+|---|---|---|
+| 000 | Mapa de tudo que depende de terceiros e o que acontece se cada um cair | [docs/decisoes/000-mapa-dependencias-externas.md](docs/decisoes/000-mapa-dependencias-externas.md) |
+| 001 | CEP pelo ViaCEP, sem chave; aviso (não erro) se cair | [docs/decisoes/001-consulta-de-cep.md](docs/decisoes/001-consulta-de-cep.md) |
+| 002 | Geocoding pelo Nominatim com cache local, 1 req/s | [docs/decisoes/002-geocoding.md](docs/decisoes/002-geocoding.md) |
+| 003 | Mapa com Google Maps SDK (chave restrita ao pacote) | [docs/decisoes/003-servico-de-mapas.md](docs/decisoes/003-servico-de-mapas.md) |
+| 004 | Push pelo Expo Push Service; lembrete da consulta é local | [docs/decisoes/004-notificacoes-push.md](docs/decisoes/004-notificacoes-push.md) |
+| 005 | SMS: gateway só no servidor; o app nunca tem a credencial | [docs/decisoes/005-sms-confirmacao.md](docs/decisoes/005-sms-confirmacao.md) |
+| 006 | Conflitos da agenda deveriam ser verificados no servidor | [docs/decisoes/006-verificacao-de-conflitos.md](docs/decisoes/006-verificacao-de-conflitos.md) |
 
-1. Em `src/services/lembretes.js`, troque `ANTECEDENCIA_TESTE_MINUTOS` para `1`.
-2. Consultas → + Agendar → escolha paciente e médico → "Teste: preencher com daqui a 3 minutos" → Agendar. A mensagem diz a hora do lembrete.
-3. "Lembretes pendentes" mostra 1. Remarque a mesma consulta: continua 1.
-4. Cancele a consulta: "Lembretes pendentes" mostra 0.
-5. Agende de novo, **feche o app por completo**, espere o lembrete e toque nele: o app abre na tela da consulta (depois da biometria, se houver sessão).
-6. Volte `ANTECEDENCIA_TESTE_MINUTOS` para `null`.
+## Telas
 
-## O que a Aula 9 entregou — push notifications
+| Tela | Arquivo | O que faz | Recursos usados |
+|---|---|---|---|
+| Login | `src/screens/Login/LoginScreen.js` | E-mail e senha; guarda o token no cofre | API de autenticação, SecureStore |
+| Entrar com biometria | `src/screens/Login/LoginBiometrico.js` | Destranca o token guardado com digital/rosto | Biometria |
+| Menu | `src/screens/Menu/Menu.js` | Atalhos; registra push e a tarefa; sincroniza ao abrir e ao voltar | Push, background, AppState |
+| Médicos | `src/screens/Medico/Medico.js` (+ `CadastroEdicaoMedicoScreen.js`) | Lista com busca, cadastro, edição e exclusão | API, câmera (foto) |
+| Pacientes | `src/screens/Paciente/Paciente.js` (+ `CadastroEdicaoPacienteScreen.js`) | Lista, cadastro com CEP automático, edição e exclusão | API, ViaCEP, câmera |
+| Sinais vitais | `src/screens/Consulta/SinaisVitais.js` | Lê a frequência cardíaca de um medidor e grava a média no prontuário | Bluetooth (simulado por padrão) |
+| Consultas | `src/screens/Consulta/Consultas.js` | Lista, remarcar, cancelar (cancela o lembrete e oferece SMS) | API, notificações |
+| Agendar / remarcar | `src/screens/Consulta/AgendarConsulta.js` | Grava na API e depois agenda o lembrete 1 h antes | API, notificações |
+| Consulta | `src/screens/Consulta/DetalheConsulta.js` | Detalhe aberto pelo toque no lembrete ou no push | API |
+| Enviar SMS | `src/screens/Consulta/EnviarSms.js` | Confirmação ou cancelamento por SMS, pelo aparelho ou pela clínica | SMS, API, gateway |
+| Conflitos da agenda | `src/screens/Agenda/SincronizarAgenda.js` | Verificação de horários sobrepostos sem travar a tela | Processamento fatiado |
+| Sincronização | `src/screens/Agenda/HistoricoSincronizacao.js` | Quando a agenda foi atualizada e o que mudou; liga/desliga o segundo plano | Background, AsyncStorage |
+| Como chegar | `src/screens/Clinica/ComoChegar.js` | Distância e tempo estimado até a clínica; endereço sempre visível | GPS |
+| Sobre a clínica | `src/screens/Sobre/SobreClinica.js` | Endereço, telefone e coordenadas | Nominatim |
 
-Branch `feat/aula9-push`. Entregável, falhas tratadas, ética e roteiro de teste
-no aparelho em [`docs/aula9-checklist-push.md`](docs/aula9-checklist-push.md).
+## Serviços externos
 
-| Onde | O quê |
-| --- | --- |
-| `src/services/push.js` | `obterTokenPush` (aparelho físico, canal, permissão, `projectId` do EAS), `registrarDispositivo` (POST/PUT em `/dispositivos`, a cada abertura), `desregistrarDispositivo` (logout) e `ouvirPushRecebido`. Nunca derruba o app: devolve o motivo quando o push não está disponível |
-| `src/services/sessao.js` | Guarda também `{ id, nome, perfil }` do usuário no login, para vincular o dispositivo mesmo quando a pessoa entra só com biometria |
-| `src/screens/Menu/Menu.js` | Registra o dispositivo ao abrir; rodapé diz se os avisos da clínica estão ativos ou por que não estão |
-| `App.js` | Push de `consulta-cancelada` com o app aberto cancela o lembrete local daquela consulta |
-| `servidor/enviar-push.js` | Passos 3 e 4: lê `/dispositivos`, envia em lotes de 100, confere o `status` de cada ticket, lê os recibos e apaga tokens `DeviceNotRegistered`. Modos `teste`, `cancelamento` e `lembretes-do-dia` (`npm run push -- <modo>`) |
-| `app.json` | Plugin `expo-notifications` (cor do ícone) |
-| `db_clinica.json` | Coleção `dispositivos` (`token`, `usuarioId`, `plataforma`, `criadoEm`, `atualizadoEm`) |
+| Serviço | Para que | Exige chave? | Cota / limites |
+|---|---|---|---|
+| ViaCEP | Endereço a partir do CEP | Não | Sem cota publicada; uso razoável (consulta só ao sair do campo) |
+| Nominatim (OpenStreetMap) | Coordenadas da clínica | Não | 1 requisição por segundo, `User-Agent` obrigatório, crédito ao OSM |
+| Expo Push Service | Push de cancelamento e lembrete do dia | Não para enviar; exige `projectId` do EAS e credencial FCM | Até 100 mensagens por requisição; recibos para confirmar entrega |
+| Gateway de SMS | SMS pela clínica | Sim, **no servidor** (`GATEWAY_SMS_KEY`) | Hoje é simulado (`servidor/gateway-sms.js`); um real (Zenvia, Twilio) cobra por segmento de 160 caracteres |
+| Google Maps SDK | Mapa da clínica (Aula 12) | Sim (`GOOGLE_MAPS_API_KEY`) | Exige faturamento no Google Cloud. **Ainda não implementado** |
 
-> **Push não roda no Expo Go** (Android, SDK 53+) nem em emulador: exige
-> development build, aparelho físico e `projectId` do EAS. Sem isso o app
-> mostra o motivo e segue com o lembrete local da Aula 8.
+### Variáveis de ambiente
 
-## O que a Aula 10 entregou — conflitos da agenda sem travar a interface
+| Variável | Para que serve | Onde obter |
+|---|---|---|
+| `EAS_PROJECT_ID` | `projectId` do EAS, usado no token de push | `eas init` (ou painel do expo.dev) |
+| `ANDROID_PACKAGE` | Identificador do app; padrão `com.clinicaaura.app` | Decisão da squad (não muda depois de publicar) |
+| `GOOGLE_MAPS_API_KEY` | Chave do mapa (Aula 12) | Google Cloud Console, restrita ao pacote do app |
+| `GATEWAY_SMS_KEY` | Chave do gateway de SMS, **só dos servidores** | Painel do gateway (no laboratório, vale a chave padrão) |
 
-Branch `feat/aula10-responsividade`. Checklist, arguição e a ordem certa das
-perguntas em [`docs/aula10-checklist-responsividade.md`](docs/aula10-checklist-responsividade.md).
-Decisão aparelho × servidor no [ADR 006](docs/decisoes/006-verificacao-de-conflitos.md).
+Copie `.env.example` para `.env` e preencha. O `app.config.js` lê os valores
+de `process.env` (o Expo carrega o `.env` sozinho); no build da nuvem, os
+mesmos nomes vão como EAS Secrets (`eas secret:create --name <NOME> --value "..."`).
 
-| Onde | O quê |
-| --- | --- |
-| `servidor/gerar-consultas.js` | `npm run gerar-consultas -- 3000` grava de 2 a 5 mil consultas (`gerada: true`, médicos 1 a 10, 30 dias, 30/60 min, horários repetidos de propósito). `-- limpar` tira só as geradas. **Não commitar o db com elas** |
-| `src/services/conflitos.js` | `conflita` (`inicioA < fimB && inicioB < fimA`), `detectarConflitosIngenuo`, `detectarConflitosOtimizado` (agrupa por médico, ordena) e `detectarConflitos` (fatiado, com progresso e cancelamento) |
-| `src/services/processamento.js` | `cederAVez` (`setTimeout(0)`), `processarEmFatias`, `criarSinalDeCancelamento` |
-| `src/hooks/useTarefaPesada.js` | Estados rodando / progresso / resultado / erro; ref de "ainda montado"; cancela ao sair da tela |
-| `src/screens/Agenda/SincronizarAgenda.js` | Ingênuo bloqueante × fatiado lado a lado, barra de progresso, Cancelar, escolha da fatia e contador de toques |
-| `src/services/conflitos.test.js` e `tests/medir-conflitos.mjs` | As três versões dão o mesmo resultado; `npm run medir` reproduz os números abaixo |
-
-### Medições (Passos 2, 3 e 4)
-
-Medidas com `npm run medir` (Node 24, PC Windows). No aparelho os números
-são maiores; a tela mostra os dela para a squad anotar.
-
-| Consultas | Ingênuo | Comparações | Otimizado | Comparações | Conflitos |
-| --- | --- | --- | --- | --- | --- |
-| 3000 | **469 ms** (tudo bloqueado) | 4.498.500 | **5 ms** | 4.530 | 1540 (iguais) |
-| 5000 | **1033 ms** | 12.497.500 | **9 ms** | 9.106 | 4116 (iguais) |
-
-| Fatia (3000 consultas) | Tempo total | Fatias | Maior bloqueio da thread |
-| --- | --- | --- | --- |
-| 100 | 530 ms | 35 | 15,7 ms |
-| **500** | 156 ms | 10 | 3,5 ms |
-| 5000 | 158 ms | 10 | 3,0 ms |
-
-**Fatia escolhida: 500.** Com 100, o tempo total triplica só de esperar o
-`setTimeout` (≈15 ms cada no Windows, ≈1 quadro no celular). Com 5000 cada
-médico vira um bloco único: hoje passa, porque o algoritmo melhorado é barato,
-mas o bloqueio cresce com a agenda. 500 mantém o maior bloqueio bem abaixo de
-um quadro (16 ms) sem desperdiçar tempo.
-
-A maior lição dos números: o Passo 3 (fazer menos trabalho) rendeu ~100×;
-o Passo 4 (fatiar) não deixa mais rápido, deixa a tela viva.
-
-### react-native-worklets (extensão)
-
-Worklets rodam JavaScript numa thread separada da thread da interface. Seriam
-justificáveis se, mesmo com o algoritmo melhor, um cálculo inevitável no
-aparelho passasse de centenas de milissegundos (ex.: processar sinais vitais
-contínuos em tempo real). Não é o caso hoje: o otimizado leva 5 ms e o certo
-é mover a verificação para o servidor (ADR 006).
-
-## O que a Aula 11 entregou — sincronização em segundo plano
-
-Branch `feat/aula11-background`. Entregável, decisões, ética e roteiro de
-teste em [`docs/aula11-background.md`](docs/aula11-background.md).
-
-| Onde | O quê |
-| --- | --- |
-| `src/services/sincronizacao.js` | `sincronizarAgenda(origem)`: sem tela, sem `Alert`, sem navegação. Baixa `/consultas`, roda `detectarConflitos` (Aula 10) e `sincronizarLembretes` (Aula 8), grava o registro (data, origem, duração, resultado) com limite de 20. `precisaSincronizar`, preferência de ligar/desligar o background |
-| `src/hooks/useSincronizacao.js` | `AppState`: sincroniza ao **voltar** para o app (compara antes e depois), respeitando 15 min de intervalo |
-| `src/services/tarefaBackground.js` | Tarefa periódica com `expo-background-fetch` + `expo-task-manager` (SDK 51). `BACKGROUND_REAL` liga o modo real; `isTaskRegisteredAsync` antes de registrar; `minimumInterval` é um pedido |
-| `App.js` | `definirTarefa()` no **escopo do módulo**, nunca em `useEffect` |
-| `src/screens/Agenda/HistoricoSincronizacao.js` | "Última atualização: há N min", o que encontrou, puxar para atualizar (ignora o intervalo), chave para desligar o segundo plano e histórico |
-| `src/screens/Menu/Menu.js` | Registra a tarefa ao entrar, sincroniza ao voltar ao app, desregistra no logout |
-| `app.json` | `UIBackgroundModes: ["fetch"]` para o iOS |
-
-> **A tarefa periódica exige development build.** No Expo Go valem as portas
-> manual e "voltou ao app", que cobrem o caso mais comum. A tela nunca promete
-> "atualizado a cada 15 minutos": mostra há quanto tempo foi a última vez.
-
-## O que a Aula 13 entregou — SMS e consolidação
-
-Branch `feat/aula13-sms`. Matriz de consolidação e regra dos três canais em
-[`docs/aula13-matriz-consolidacao.md`](docs/aula13-matriz-consolidacao.md);
-problemas do fluxo inteiro em [`docs/aula13-problemas-fluxo.md`](docs/aula13-problemas-fluxo.md).
-
-| Onde | O quê |
-| --- | --- |
-| `src/services/sms.js` | Dois caminhos explícitos: `pedirEnvioPeloAparelho` (confere `isAvailableAsync`, devolve o `result` sem tratá-lo como sucesso) e `pedirEnvioPeloServidor` (post na **nossa** API, nunca no gateway) |
-| `src/services/regrasSms.js` | Regras puras: `normalizarNumero` (+5516999998888 ou null), `contarSegmentos` (160/153 em GSM-7, 70/67 com acento), `avaliarTexto`, modelos sem acento e sem dado clínico |
-| `src/screens/Consulta/EnviarSms.js` | Recepção avisa o paciente: os dois botões com quem envia e quem paga, contador com destaque acima de 160, confirmação com o custo antes do envio pela clínica, "confira no seu app de mensagens" e "enfileirado" (não "enviado"/"entregue"), aviso sobre dado clínico |
-| `Consultas.js` / `DetalheConsulta.js` | Cancelar oferece o SMS de cancelamento; o detalhe oferece o de confirmação |
-| `servidor/auth-api.js` | `POST /sms` (com token): busca a consulta e o telefone **no servidor**, monta o texto padrão e chama o gateway com a chave que só ele conhece |
-| `servidor/gateway-sms.js` | Gateway **simulado** (porta 3002): exige `X-Api-Key`, recusa número fora do formato com 400, conta segmentos e custo, responde 202 e marca "entregue" depois |
-| `src/services/regrasSms.test.js` | 160 × 161, acento × 70, normalização, modelos em um segmento |
-
-> O demo `A13_03_Demo_SMS` e o `gabarito_sms.js` não vieram no material; o
-> gateway foi escrito seguindo o comportamento descrito no roteiro.
-
-## O que a Aula 14 entregou — testes
-
-Branch `feat/aula14-testes`. Plano de testes (fluxos críticos, pirâmide, o que
-não é coberto) em [`docs/aula14-plano-de-testes.md`](docs/aula14-plano-de-testes.md);
-bugs encontrados em [`docs/aula14-relatorio-de-bugs.md`](docs/aula14-relatorio-de-bugs.md).
+## Testes
 
 ```bash
-npm test   # 17 arquivos, 86 testes; sem emulador, aparelho, servidor ou internet
+npm test                 # unidade e integração (Jest + Testing Library), 86 testes
+npm run test:coverage    # com cobertura
 ```
 
-| Onde | O quê |
-| --- | --- |
-| `jest.config.json`, `babel.config.js`, `jest.setup.js`, `jest.afterEnv.js` | Preset `jest-expo`, dublês comuns (AsyncStorage, cofre, notificações) e teto de espera de 5 s |
-| `src/test-utils.js` | `render`/`fireEvent` assíncronos (como na Testing Library 14), API falsa em memória, API fora do ar e `entrar()` |
-| `src/regras.js` | Validações que saíram dos componentes: login (e-mail válido, senha ≥ 6), médico, paciente, agendamento |
-| Telas | `testID` previsíveis: `campo-email`, `botao-entrar`, `mensagem-erro`, `tela-medicos`, `medico-{id}`, `consulta-{id}`... |
-| `*.test.js` ao lado de cada arquivo | Unidade das regras (fronteiras), falha de cada periférico (GPS, câmera, biometria, Bluetooth, notificação, API), login, agendamento, cancelamento e a jornada completa (`App.test.js`) |
+Não precisa de emulador, aparelho, servidor nem internet.
 
-Os antigos testes em `node:test` (`tests/*.test.mjs`) foram convertidos para
-Jest e movidos para o lado dos arquivos testados. `npm run medir` (Aula 10)
-continua em `tests/medir-conflitos.mjs`.
+**O que a suíte cobre:** as regras puras com seus casos de fronteira
+(senha com exatamente 6 caracteres, consultas que se encostam, SMS de 160 × 161
+caracteres, número de telefone com e sem DDI); a falha de cada periférico
+(GPS negado, câmera cancelada, biometria sem sensor, Bluetooth sem aparelhos
+ou instável, notificação sem permissão, API fora do ar); os fluxos de login,
+agendamento, cancelamento e SMS; e a jornada completa do app em memória.
+Detalhes em [`docs/aula14-plano-de-testes.md`](docs/aula14-plano-de-testes.md).
 
-## Estrutura
+**O que a suíte NÃO cobre, e por quê:** hardware de verdade (os periféricos
+são dublês; o comportamento real só se confere no aparelho), os servidores
+(`auth-api`, `gateway-sms`, `enviar-push`, conferidos à mão com `curl`), a
+tarefa em background (quem decide quando roda é o sistema operacional) e
+testes end-to-end: **não há Maestro** (`.maestro/`) no projeto.
 
-```
-proj-clinica-aura/
-├── App.js                -> verifica sessão + NavigationContainer + Stack de rotas
-├── index.js              -> registra o App.js como ponto de entrada
-├── app.json              -> configurações do app (nome, ícone, splash)
-├── db_clinica.json       -> base do json-server (API mock de dados)
-├── PENDENCIAS.md         -> tudo o que ficou em aberto, num lugar só
-├── .env.example          -> modelo de chaves de serviços externos (o .env fica fora do Git)
-├── docs/decisoes/        -> registros de decisão arquitetural (ADR) dos serviços externos
-├── docs/aula6-checklist-perifericos.md -> checklist, arguição e ética da Aula 6
-├── docs/aula7-checklist-bluetooth.md -> checklist, falhas e arguição da Aula 7
-├── docs/aula8-checklist-notificacoes.md -> checklist, arguição e dose da Aula 8
-├── docs/aula9-checklist-push.md -> push: entregável, falhas, ética e teste no aparelho
-├── docs/aula10-checklist-responsividade.md -> medições, checklist e arguição da Aula 10
-├── docs/aula11-background.md -> sincronização em segundo plano: decisões, ética e teste
-├── docs/aula13-matriz-consolidacao.md -> estado real de cada recurso e regra dos três canais
-├── docs/aula13-problemas-fluxo.md -> problemas do fluxo inteiro (entrada da Aula 14)
-├── tests/medir-conflitos.mjs -> medição da Aula 10 (npm run medir)
-├── jest.config.json      -> Jest com o preset jest-expo (npm test)
-├── docs/aula14-plano-de-testes.md -> fluxos críticos, pirâmide e o que não é coberto
-├── docs/aula14-relatorio-de-bugs.md -> bugs encontrados pelos testes
-├── package.json          -> dependências e scripts
-├── assets/               -> ícones, imagens
-├── servidor/
-│   ├── auth-api.js       -> API de autenticação (Node puro, porta 3001)
-│   ├── enviar-push.js    -> envio de push pelo terminal (lotes, tickets, recibos)
-│   ├── gerar-consultas.js -> volume de consultas para a Aula 10
-│   └── gateway-sms.js    -> gateway de SMS simulado (porta 3002)
-└── src/
-    ├── theme.js          -> cores e espaçamentos compartilhados
-    ├── config/
-    │   └── clinica.js    -> dados institucionais (endereço usado no geocoding)
-    ├── services/
-    │   ├── sessao.js     -> cofre do token (expo-secure-store)
-    │   ├── api.js        -> cliente HTTP da NOSSA API (token + tratamento de 401)
-    │   ├── httpExterno.js -> cliente HTTP de TERCEIROS (timeout, User-Agent, 429, sem token)
-    │   ├── viacep.js     -> consultarCep()
-    │   ├── geocoding.js  -> geocodificar() no Nominatim (1 req/s)
-    │   ├── localizacaoClinica.js -> coordenadas da clínica com cache
-    │   ├── localizacao.js -> GPS do aparelho: permissão, leitura, Haversine
-    │   ├── bluetooth.js  -> BLE: implementações simulada e real, mesma interface
-    │   ├── frequenciaCardiaca.js -> decodificação pura do valor lido
-    │   ├── lembretes.js  -> lembrete local de consulta (expo-notifications)
-    │   ├── navegacao.js  -> ref de navegação + destino pendente do toque
-    │   ├── push.js       -> token de push + registro do dispositivo na API
-    │   ├── conflitos.js  -> verificação de conflitos (ingênua, otimizada, fatiada)
-    │   ├── processamento.js -> cederAVez, fatias e cancelamento
-    │   ├── sincronizacao.js -> sincronizarAgenda(origem), com e sem tela
-    │   ├── tarefaBackground.js -> tarefa periódica (development build)
-    │   ├── sms.js        -> SMS pelo aparelho ou pelo servidor
-    │   └── regrasSms.js  -> número, segmentos e modelos de texto (puro)
-    ├── hooks/
-    │   ├── useTarefaPesada.js -> progresso + cancelamento para tarefa pesada
-    │   └── useSincronizacao.js -> sincroniza ao voltar para o app (AppState)
-    ├── utils/
-    │   └── dataHora.js   -> formatar e montar data/hora (puro, testado)
-    ├── components/
-    │   ├── FotoPerfil.js -> foto de perfil (câmera/galeria), usada nos dois forms
-    │   ├── MedicoForm.js
-    │   └── PacienteForm.js
-    └── screens/
-        ├── Login/
-        │   ├── LoginScreen.js
-        │   └── LoginBiometrico.js
-        ├── Menu/Menu.js
-        ├── Medico/
-        │   ├── Medico.js
-        │   └── CadastroEdicaoMedicoScreen.js
-        ├── Paciente/
-        │   ├── Paciente.js
-        │   └── CadastroEdicaoPacienteScreen.js
-        ├── Agenda/
-        │   ├── SincronizarAgenda.js
-        │   └── HistoricoSincronizacao.js
-        ├── Clinica/ComoChegar.js
-        ├── Consulta/
-        │   ├── SinaisVitais.js
-        │   ├── Consultas.js
-        │   ├── AgendarConsulta.js
-        │   ├── DetalheConsulta.js
-        │   └── EnviarSms.js
-        └── Sobre/SobreClinica.js
+## Build de produção
+
+```bash
+npm install -g eas-cli
+eas login
+eas init                                          # cria o projeto no EAS e mostra o projectId
+eas build --platform android --profile production
 ```
 
-## Squad
+Perfis disponíveis em `eas.json`:
 
-- [nome do integrante 1]
-- [nome do integrante 2]
-- [nome do integrante 3]
+| Perfil | Gera | Para quê |
+|---|---|---|
+| `development` | APK com o cliente de desenvolvimento embutido | Testar push, Bluetooth real e tarefa em background, que não rodam no Expo Go. Exige `npx expo install expo-dev-client` antes |
+| `preview` | APK instalável direto, sem loja | Distribuir para a banca/colegas (o mais prático para a Aula 16) |
+| `production` | App Bundle (`.aab`) para a Play Store | Publicação. `autoIncrement` sobe o `versionCode` a cada build |
+
+`version` (1.0.0, o que o usuário vê) fica no `app.config.js`. O `versionCode`
+do Android (inteiro que a loja exige que sempre suba) é controlado pelo EAS
+(`"appVersionSource": "remote"` + `autoIncrement`); não edite à mão.
+
+**Pendências de build** (nenhum build foi gerado ainda):
+- conta EAS e `EAS_PROJECT_ID` no `.env` / EAS Secrets;
+- confirmar o `ANDROID_PACKAGE` (não muda depois de publicar);
+- credencial FCM V1 (`eas credentials`) para o push;
+- `expo-dev-client` instalado para o perfil `development`;
+- `GOOGLE_MAPS_API_KEY` só quando a Aula 12 for feita;
+- trocar `localhost` em `src/services/api.js` pelo endereço HTTPS da API real.
+
+## Limitações conhecidas
+
+| Limitação | Impacto | Contorno |
+|---|---|---|
+| API é um mock local (json-server) em HTTP, sem validar o token | Dados só existem no computador do laboratório; nada é seguro para produção | Apontar `api.js` para a API real com HTTPS |
+| Sessões da API de autenticação ficam em memória | Reiniciar a API desloga todos; a biometria destranca um token que já não vale | Entrar de novo com e-mail e senha |
+| Bluetooth roda em modo simulado | Os aparelhos e leituras são de demonstração | `MODO_SIMULADO = false` num development build, com um medidor BLE |
+| Push exige development build, `projectId` e credencial FCM | No Expo Go nenhum push chega; o Menu mostra o motivo | Lembrete local da Aula 8 continua valendo |
+| Tarefa em background exige development build e o sistema decide quando roda | No Expo Go só há sincronização manual, ao abrir e ao voltar ao app | Tela de Sincronização mostra a última atualização e permite puxar para atualizar |
+| SMS pela clínica usa gateway simulado | Nenhum SMS sai de verdade | Gateway real (ADR 005) com a chave no servidor |
+| SMS pelo aparelho exige chip | Em tablet ou emulador o botão fica desabilitado | Enviar pela clínica |
+| Mapa (Aula 12) não implementado | "Como chegar" mostra distância, sem mapa | Botão "Abrir no app de mapas" |
+| Foto de perfil é só a URI do cache do aparelho | Some se o cache for limpo; não aparece em outro aparelho | Upload para o servidor (pendente) |
+| Verificação de conflitos roda no aparelho e baixa a agenda inteira | Gasta dados e bateria com agendas grandes | Mover para o servidor (ADR 006) |
+| Lembrete local é por aparelho | Consulta cancelada em outro aparelho continua avisando até sincronizar | Sincronização (Aula 11) e push de cancelamento (Aula 9) |
+
+## Equipe
+
+| Integrante | Frentes principais |
+|---|---|
+| Luiz | Todas as frentes até a Aula 15 (ver a matriz em `docs/aula13-matriz-consolidacao.md`) |
+| `<integrante 2>` | `<a definir pela squad>` |
+| `<integrante 3>` | `<a definir pela squad>` |

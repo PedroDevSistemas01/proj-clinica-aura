@@ -159,7 +159,7 @@ const CARACTERISTICA_FREQUENCIA = '00002a37-0000-1000-8000-00805f9b34fb';
 export async function pedirPermissoes() {
   if (Platform.OS !== 'android') {
     // No iOS a caixa do sistema aparece sozinha na primeira busca, com o texto
-    // do app.json (bluetoothAlwaysPermission).
+    // do app.config.js (bluetoothAlwaysPermission).
     return true;
   }
 
