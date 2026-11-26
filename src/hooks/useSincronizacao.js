@@ -17,23 +17,36 @@ export default function useSincronizacao(aoSincronizar) {
   callback.current = aoSincronizar;
 
   useEffect(() => {
-    const assinatura = AppState.addEventListener('change', async (proximo) => {
-      // Sem comparar ANTES e DEPOIS, o evento dispara em situações que não
-      // interessam (ex.: active -> inactive ao puxar a central de avisos).
-      const voltou = /inactive|background/.test(estadoAnterior.current) && proximo === 'active';
-      estadoAnterior.current = proximo;
+    let ativo = true;
 
-      if (!voltou || emAndamento.current) return;
+    async function talvezSincronizar(origem) {
+      if (emAndamento.current) return;
       if (!(await precisaSincronizar(INTERVALO_MINIMO_MINUTOS))) return;
 
       emAndamento.current = true;
       try {
-        const entrada = await sincronizarAgenda('voltou ao app');
-        callback.current?.(entrada);
+        const entrada = await sincronizarAgenda(origem);
+        if (ativo) callback.current?.(entrada);
       } finally {
         emAndamento.current = false;
       }
+    }
+
+    // Correção do problema P2 da Aula 13: abrir o app do zero também conta
+    // como "quero dado atualizado". Sem isto, só a VOLTA do segundo plano
+    // sincronizava. O intervalo mínimo continua valendo.
+    talvezSincronizar('abriu o app');
+
+    const assinatura = AppState.addEventListener('change', (proximo) => {
+      // Sem comparar ANTES e DEPOIS, o evento dispara em situações que não
+      // interessam (ex.: active -> inactive ao puxar a central de avisos).
+      const voltou = /inactive|background/.test(estadoAnterior.current) && proximo === 'active';
+      estadoAnterior.current = proximo;
+      if (voltou) talvezSincronizar('voltou ao app');
     });
-    return () => assinatura.remove();
+    return () => {
+      ativo = false;
+      assinatura.remove();
+    };
   }, []);
 }
