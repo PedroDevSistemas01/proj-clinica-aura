@@ -38,7 +38,7 @@ Não precisa de emulador, aparelho, servidor nem internet. Resultado atual:
 | Degrau | Arquivos | O que pega |
 | --- | --- | --- |
 | **Unidade** (ms, sem tela) | `regras.test.js`, `conflitos.test.js`, `regrasSms.test.js`, `localizacao.test.js`, `dataHora.test.js`, `frequenciaCardiaca.test.js` | Fronteiras: senha com exatamente 6 caracteres passa, 5 não; consultas que se **encostam** (09:00–09:30 e 09:30–10:00) não conflitam; 160 caracteres = 1 SMS, 161 = 2; 70 com acento; número com e sem DDI, com máscara e inválido; 1 grau de latitude = 111,19 km |
-| **Integração** (s, tela em memória) | `ComoChegar`, `MedicoForm`, `LoginBiometrico`, `SinaisVitais`, `AgendarConsulta`, `Consultas`, `Paciente`, `LoginScreen`, `EnviarSms`, `useSincronizacao`, `App` | Cenários de falha dos periféricos e os três fluxos críticos, com o erro antes do caminho feliz |
+| **Integração** (s, tela em memória) | `MapaClinica` (ex-`ComoChegar`), `MedicoForm`, `LoginBiometrico`, `SinaisVitais`, `AgendarConsulta`, `Consultas`, `Paciente`, `LoginScreen`, `EnviarSms`, `useSincronizacao`, `App` | Cenários de falha dos periféricos e os três fluxos críticos, com o erro antes do caminho feliz |
 | **E2E** (min, aparelho) | — | Não feito (fica como conceito, como diz a aula). O README modelo cita Maestro; não há `.maestro/` no projeto |
 
 Prova de que a fronteira está coberta: trocando `<` por `<=` em `conflita()`,

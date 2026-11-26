@@ -48,3 +48,22 @@ jest.mock('expo-file-system', () => ({
   copyAsync: jest.fn(async () => undefined),
   deleteAsync: jest.fn(async () => undefined),
 }));
+
+// Mapa (Aula 12): o MapView é nativo. O dublê desenha Views comuns e guarda
+// os métodos de câmera chamados pela tela (fitToCoordinates, animateToRegion)
+// em __camera, para o teste conferir.
+jest.mock('react-native-maps', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const camera = {
+    fitToCoordinates: jest.fn(),
+    animateToRegion: jest.fn(),
+  };
+  const MapView = React.forwardRef(function MapView(props, ref) {
+    React.useImperativeHandle(ref, () => camera);
+    return React.createElement(View, props, props.children);
+  });
+  const Marker = (props) => React.createElement(View, props, props.children);
+  const Callout = (props) => React.createElement(View, props, props.children);
+  return { __esModule: true, default: MapView, Marker, Callout, __camera: camera };
+});

@@ -14,7 +14,7 @@
 | --- | --- | --- | --- |
 | 1 | Entrar (senha ou biometria) | ok, com ressalva (P3) | código + `curl POST /login` |
 | 2 | Ver médicos e especialidades | ok | código |
-| 3 | Ver a clínica no mapa e a distância | **quebra**: não existe mapa (P1) | código |
+| 3 | Ver a clínica no mapa e a distância | ok desde a Aula 12 (P1 resolvido) | código + testes |
 | 4 | Agendar uma consulta | ok | código |
 | 5 | Conferir o lembrete local | ok ("Lembretes pendentes") | código |
 | 6 | Foto de perfil | ok, com ressalva (P5) | código |
@@ -26,7 +26,7 @@
 
 | # | Problema | Passos para reproduzir | Degrau do teste (Aula 14) |
 | --- | --- | --- | --- |
-| P1 | Não há mapa: "Como chegar" mostra distância e tempo, mas nenhum mapa | Menu → Como chegar | — (falta implementar a Aula 12) |
+| P1 | Não há mapa: "Como chegar" mostra distância e tempo, mas nenhum mapa | Menu → Como chegar | integração (`MapaClinica.test.js`). **Resolvido na Aula 12** |
 | P2 | Abrir o app do zero não sincroniza a agenda: a sincronização só dispara ao **voltar** do segundo plano (`AppState`), não na abertura | Fechar o app por completo, abrir, ir em Menu → Sincronização: a última atualização continua a antiga | integração (Menu) |
 | P3 | Sessão "meio viva": a API de autenticação guarda as sessões em memória. Depois que ela reinicia, a biometria destranca o token velho, o json-server aceita qualquer token, e só o SMS pelo servidor responde 401 e devolve ao login | Entrar, reiniciar `npm run auth-api`, destrancar com biometria, tentar "Enviar pela clínica" | integração (EnviarSms com 401) |
 | P4 | Cancelamento depende da ordem certa: o `DELETE` vem antes, então o servidor não acha mais a consulta para montar o SMS. Resolvido mandando `pacienteId` e `dataHora` no pedido (o número continua vindo do cadastro) | `curl POST /sms` com consulta apagada e sem os extras → 404 | unidade/integração (cancelamento) |

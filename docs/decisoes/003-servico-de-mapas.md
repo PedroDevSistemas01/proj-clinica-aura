@@ -8,7 +8,7 @@
 | Squad | proj-clinica-aura |
 | Data | 30/09/2026 |
 | Responsável pelo registro | Luiz |
-| Situação | **Proposta** (implementação na Aula 12, 22/10/2026) |
+| Situação | **Aceita** (implementada na Aula 12, em 26/11/2026; a chave do Android ainda não foi criada) |
 
 ## 1. Contexto
 

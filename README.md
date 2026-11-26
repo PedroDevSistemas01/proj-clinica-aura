@@ -157,6 +157,7 @@ chamam a biblioteca direto.
 | 004 | Push pelo Expo Push Service; lembrete da consulta é local | [docs/decisoes/004-notificacoes-push.md](docs/decisoes/004-notificacoes-push.md) |
 | 005 | SMS: gateway só no servidor; o app nunca tem a credencial | [docs/decisoes/005-sms-confirmacao.md](docs/decisoes/005-sms-confirmacao.md) |
 | 006 | Conflitos da agenda deveriam ser verificados no servidor | [docs/decisoes/006-verificacao-de-conflitos.md](docs/decisoes/006-verificacao-de-conflitos.md) |
+| 007 | Não traçar rota dentro do app: abrir o app de mapas do aparelho | [docs/decisoes/007-rota-no-app-de-mapas.md](docs/decisoes/007-rota-no-app-de-mapas.md) |
 
 ## Telas
 
@@ -174,7 +175,7 @@ chamam a biblioteca direto.
 | Enviar SMS | `src/screens/Consulta/EnviarSms.js` | Confirmação ou cancelamento por SMS, pelo aparelho ou pela clínica | SMS, API, gateway |
 | Conflitos da agenda | `src/screens/Agenda/SincronizarAgenda.js` | Verificação de horários sobrepostos sem travar a tela | Processamento fatiado |
 | Sincronização | `src/screens/Agenda/HistoricoSincronizacao.js` | Quando a agenda foi atualizada e o que mudou; liga/desliga o segundo plano | Background, AsyncStorage |
-| Como chegar | `src/screens/Clinica/ComoChegar.js` | Distância e tempo estimado até a clínica; endereço sempre visível | GPS |
+| Como chegar | `src/screens/Clinica/MapaClinica.js` | Mapa com a clínica e o paciente, balão com endereço e telefone, distância e tempo estimado; painel de texto sempre visível; "Como chegar" abre o app de mapas do aparelho | Mapa (react-native-maps), GPS |
 | Sobre a clínica | `src/screens/Sobre/SobreClinica.js` | Endereço, telefone e coordenadas | Nominatim |
 
 ## Serviços externos
@@ -185,7 +186,7 @@ chamam a biblioteca direto.
 | Nominatim (OpenStreetMap) | Coordenadas da clínica | Não | 1 requisição por segundo, `User-Agent` obrigatório, crédito ao OSM |
 | Expo Push Service | Push de cancelamento e lembrete do dia | Não para enviar; exige `projectId` do EAS e credencial FCM | Até 100 mensagens por requisição; recibos para confirmar entrega |
 | Gateway de SMS | SMS pela clínica | Sim, **no servidor** (`GATEWAY_SMS_KEY`) | Hoje é simulado (`servidor/gateway-sms.js`); um real (Zenvia, Twilio) cobra por segmento de 160 caracteres |
-| Google Maps SDK | Mapa da clínica (Aula 12) | Sim (`GOOGLE_MAPS_API_KEY`) | Exige faturamento no Google Cloud. **Ainda não implementado** |
+| Google Maps SDK (Android) / Apple Maps (iOS) | Mapa da clínica (Aula 12) | Android: sim (`GOOGLE_MAPS_API_KEY`), só no build próprio. iOS: não | Exige faturamento no Google Cloud. **Chave ainda não criada**: ver "Mapa e chave do Google Maps" |
 
 ### Variáveis de ambiente
 
@@ -203,7 +204,7 @@ mesmos nomes vão como variáveis do EAS (`eas env:create --name <NOME> --value 
 ## Testes
 
 ```bash
-npm test                 # unidade e integração (Jest + Testing Library), 101 testes
+npm test                 # unidade e integração (Jest + Testing Library), 113 testes
 npm run test:coverage    # com cobertura
 ```
 
@@ -249,8 +250,41 @@ do Android (inteiro que a loja exige que sempre suba) é controlado pelo EAS
 - confirmar o `ANDROID_PACKAGE` (não muda depois de publicar);
 - credencial FCM V1 (`eas credentials`) para o push;
 - `expo-dev-client` instalado para o perfil `development`;
-- `GOOGLE_MAPS_API_KEY` só quando a Aula 12 for feita;
+- `GOOGLE_MAPS_API_KEY` no `.env` / `eas env`: **sem ela o mapa do Android fica cinza no build** (no Expo Go funciona);
 - trocar `localhost` em `src/services/api.js` pelo endereço HTTPS da API real.
+
+## Mapa e chave do Google Maps (Aula 12)
+
+A tela **Como chegar** (`MapaClinica.js`) usa `react-native-maps`: Apple Maps
+no iOS, sem chave; Google Maps no Android. Detalhes da aula em
+[docs/aula12-mapa.md](docs/aula12-mapa.md).
+
+**Pendência explícita: a chave do Google Maps ainda não existe.** Responsável:
+Luiz (ADR 003). No Expo Go tudo funciona, porque o Expo Go traz chave própria;
+no build do Android (Aula 15), sem a nossa chave, o mapa vira um retângulo
+cinza. Procedimento em [docs/CONTAS_E_CHAVES.md](docs/CONTAS_E_CHAVES.md),
+seção 3: Google Cloud com faturamento, Maps SDK for Android, chave restrita ao
+pacote `com.clinicaaura.app`, `GOOGLE_MAPS_API_KEY` no `.env` (fora do Git) e
+no `eas env`, e um build novo. O `app.config.js` leva o valor para
+`android.config.googleMaps.apiKey`; **a chave nunca é escrita no código**.
+
+**Rota:** o app não traça rota. O botão **Como chegar** abre o app de mapas
+do aparelho (`geo:` no Android, `maps:` no iOS). Decisão no
+[ADR 007](docs/decisoes/007-rota-no-app-de-mapas.md): ganha-se rota, trânsito
+e navegação de graça e com qualidade melhor; perde-se o controle da
+experiência, porque o usuário sai do app.
+
+**Acessibilidade:** a informação vive no texto. O mapa tem
+`accessibilityLabel`, todos os botões têm `accessibilityRole` e
+`accessibilityLabel`, e endereço e telefone são selecionáveis. Sem rede, o
+mapa fica cinza mas o painel continua completo.
+
+**O que o leitor de tela revelou:** o teste com TalkBack/VoiceOver ainda não
+foi feito no aparelho (pendência). Na revisão sem aparelho foram corrigidos:
+os botões herdados da Aula 6 ("Usar minha localização", "Tentar novamente",
+"Abrir os ajustes", "Atualizar posição") não tinham papel nem rótulo, e a
+distância era lida como um número solto; agora vem com "em linha reta até a
+clínica". Anote aqui o que o teste no aparelho mostrar.
 
 ## Limitações conhecidas
 
@@ -263,7 +297,7 @@ do Android (inteiro que a loja exige que sempre suba) é controlado pelo EAS
 | Tarefa em background exige development build e o sistema decide quando roda | No Expo Go só há sincronização manual, ao abrir e ao voltar ao app | Tela de Sincronização mostra a última atualização e permite puxar para atualizar |
 | SMS pela clínica usa gateway simulado | Nenhum SMS sai de verdade | Gateway real (ADR 005) com a chave no servidor |
 | SMS pelo aparelho exige chip | Em tablet ou emulador o botão fica desabilitado | Enviar pela clínica |
-| Mapa (Aula 12) não implementado | "Como chegar" mostra distância, sem mapa | Botão "Abrir no app de mapas" |
+| Chave do Google Maps ainda não existe | No build próprio do Android o mapa vira um retângulo cinza (no Expo Go e no iOS funciona) | Painel de texto com endereço, telefone e distância, e o botão "Como chegar" (app de mapas do aparelho) |
 | Foto de perfil é só a URI do cache do aparelho | Some se o cache for limpo; não aparece em outro aparelho | Upload para o servidor (pendente) |
 | Verificação de conflitos roda no aparelho e baixa a agenda inteira | Gasta dados e bateria com agendas grandes | Mover para o servidor (ADR 006) |
 | Lembrete local é por aparelho | Consulta cancelada em outro aparelho continua avisando até sincronizar | Sincronização (Aula 11) e push de cancelamento (Aula 9) |

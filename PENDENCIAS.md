@@ -1,4 +1,4 @@
-# Pendências do projeto (atualizado no fechamento, 26/11/2026)
+# Pendências do projeto (atualizado na Aula 12, 26/11/2026)
 
 Lista única do que ficou em aberto até aqui. Cada item aponta onde está o detalhe.
 
@@ -9,11 +9,15 @@ O código já recebe todas as chaves pelo `.env`. Passo a passo de cada conta em
 
 - [ ] **Conta Expo/EAS:** `eas login`, `eas init`, `EAS_PROJECT_ID` no `.env` e no `eas env`. Libera o development build (Bluetooth, background e push).
 - [ ] **Firebase:** `google-services.json` na raiz (fora do Git) e chave FCM V1 em `eas credentials`. Libera o push no Android.
-- [ ] **Google Cloud:** chave do Maps restrita ao pacote, só quando a Aula 12 for feita.
+- [ ] **Google Cloud:** chave do Maps restrita ao pacote. O mapa já existe (Aula 12): sem a chave, ele fica cinza no build do Android.
 - [ ] **Twilio ou Zenvia (opcional):** só se a clínica quiser SMS real. `SMS_PROVEDOR` + chaves no `.env` do servidor.
 - [ ] **Primeiro `eas build --profile development --platform android`** e percorrer `docs/TESTES_APARELHO.md`, Parte E.
 
 ## Precisa de aparelho físico ou development build
+
+- [ ] **Mapa com leitor de tela (Aula 12):** percorrer a tela Como chegar com TalkBack ou VoiceOver e anotar no README (seção "Mapa e chave do Google Maps") o que foi corrigido. É critério de aprovação da aula.
+- [ ] **Mapa sem rede (Aula 12):** desligar Wi-Fi e dados, reabrir Como chegar e conferir que endereço, telefone e o botão Como chegar continuam úteis.
+- [ ] **Como chegar no aparelho (Aula 12):** tocar no botão num celular físico e ver o app de mapas abrir na clínica (`geo:` no Android, `maps:` no iOS). Conferir também o efeito do delta e do `edgePadding`. Roteiro: `docs/aula12-mapa.md` e `docs/TESTES_APARELHO.md`, item 3.
 
 - [ ] **Bluetooth em modo real (Aula 7):** `BLUETOOTH_REAL=1` no `.env` (antes era editar `MODO_SIMULADO` no código) e testar num development build (`npx expo run:android` ou EAS) com um medidor de frequência cardíaca de verdade. Detalhes: `docs/aula7-checklist-bluetooth.md`.
 - [ ] **Lembrete local no aparelho (Aula 8):** com `LEMBRETE_TESTE_MINUTOS=1` no `.env`, conferir o disparo com o app fechado, o toque com o app fechado abrindo a consulta e a lista de pendentes vazia depois de cancelar. Detalhes: `docs/aula8-checklist-notificacoes.md`.
@@ -24,11 +28,11 @@ O código já recebe todas as chaves pelo `.env`. Passo a passo de cada conta em
 
 ## Precisa de conta, chave ou decisão da squad
 
-- [ ] **Chave do Google Maps (Aula 12, até 22/10/2026):** conta Google Cloud com faturamento, chave restrita ao pacote do app, guardada no `.env` (ADR 003).
+- [ ] **Chave do Google Maps (Aula 12):** conta Google Cloud com faturamento, chave restrita ao pacote do app, `GOOGLE_MAPS_API_KEY` no `.env` e no `eas env` (ADR 003), e um build novo do Android para conferir que o mapa não fica cinza. Responsável: Luiz. Passo a passo: `docs/CONTAS_E_CHAVES.md`, seção 3.
 - [ ] **SMS no aparelho (Aula 13):** celular com chip para ver o app de mensagens abrir com o texto pronto. O envio pelo servidor usa um gateway **simulado**: nenhuma mensagem sai de verdade. O envio real já está integrado como opção (`SMS_PROVEDOR=twilio` ou `zenvia`, `servidor/provedores-sms.js`), mas só foi testado com respostas simuladas: falta o primeiro envio real contra o provedor.
 - [ ] **Percorrer o fluxo inteiro num aparelho (Aula 13):** a lista de `docs/aula13-problemas-fluxo.md` foi feita lendo o código e com `curl`, sem aparelho.
 - [ ] **Dividir os responsáveis (Aula 13):** a matriz de consolidação tem todos os recursos com o mesmo responsável.
-- [ ] **Mapa da Aula 12:** não implementado; o material da Aula 12 não foi recebido. Quebra a etapa 3 do fluxo do desafio.
+- [x] ~~**Mapa da Aula 12**~~: feito na branch `feat/aula12-mapas` (`src/screens/Clinica/MapaClinica.js`). Resolve a etapa 3 do fluxo do desafio (P1).
 - [x] ~~**Integração na `main`**~~: as Aulas 5 a 15 estão na `main` (PRs #5, #6, #8 e #9), com o fechamento do projeto por cima.
 - [ ] **Revisão cruzada da Aula 8:** conferir que nenhuma tela importa `expo-notifications`, que cancelar a consulta cancela o lembrete e que o texto não expõe dado sensível.
 - [ ] **Nomes da squad:** o README e os ADRs ainda usam "Luiz" como responsável e têm placeholders de integrantes.
@@ -47,7 +51,9 @@ O código já recebe todas as chaves pelo `.env`. Passo a passo de cada conta em
 - [ ] **Fotos órfãs:** trocar ou remover a foto deixa o arquivo antigo na pasta. `apagarFoto` existe; falta os formulários chamarem depois de salvar.
 - [ ] **Cadastros antigos com URI do cache:** não são migrados; a foto antiga pode sumir até ser tirada de novo.
 - [ ] **Quem pode ver a foto do paciente:** hoje qualquer pessoa logada. Depende de perfis (recepção × médico) na API.
-- [x] ~~**Coordenadas da clínica no código**~~: resolvido no fechamento. `CLINICA_LATITUDE` e `CLINICA_LONGITUDE` no `.env`; sem elas, valem as de reserva de `src/config/clinica.js`. Viram o marcador do mapa na Aula 12.
+- [x] ~~**Coordenadas da clínica no código**~~: resolvido no fechamento. `CLINICA_LATITUDE` e `CLINICA_LONGITUDE` no `.env`; sem elas, valem as de reserva de `src/config/clinica.js`. São o marcador do mapa desde a Aula 12.
+- [ ] **Extensões da Aula 12 não feitas:** mapa com várias unidades (a clínica tem uma só e o `gabarito_MapaUnidades.js` não veio), medição de 200 marcadores com e sem `useMemo` (exige aparelho) e coordenadas vindas da API (a API mock não tem endpoint da clínica).
+- [ ] **Material da Aula 12 incompleto:** o demo `A12_03` e os gabaritos `A12_06` não foram recebidos; a tela segue os exemplos dos slides.
 - [ ] **Sinais vitais fora da tela de consulta (Aula 7):** a tela de consulta passou a existir na Aula 8 (`DetalheConsulta`); falta levar a importação para lá.
 - [ ] **Lembrete preso ao aparelho (Aula 8):** se a recepção cancela pelo sistema, o lembrete local dispara assim mesmo até o paciente abrir a lista de consultas (`sincronizarLembretes`). Resolve-se com push (Aula 9).
 - [ ] **Token ligado ao usuário, não ao paciente (Aula 9):** o app é usado pela equipe (recepção/médico), então `lembretes-do-dia` avisa todo aparelho registrado. Com login de paciente na API, filtrar por paciente.

@@ -330,6 +330,17 @@ teste em [`docs/aula11-background.md`](aula11-background.md).
 > manual e "voltou ao app", que cobrem o caso mais comum. A tela nunca promete
 > "atualizado a cada 15 minutos": mostra há quanto tempo foi a última vez.
 
+## O que a Aula 12 entregou — mapa da clínica
+
+Feita depois do fechamento, na branch `feat/aula12-mapas` (o material só
+chegou em 26/11/2026). Detalhes em [aula12-mapa.md](aula12-mapa.md).
+
+- `react-native-maps` 1.14.0; `ComoChegar.js` virou `MapaClinica.js`: mapa em cima, painel de texto embaixo.
+- `initialRegion` (delta 0.01), pino com `title`/`description`/`pinColor`, `Callout`, `fitToCoordinates` com `edgePadding`, `animateToRegion`, coordenadas com `useMemo`.
+- Acessibilidade: `accessibilityLabel` no mapa, papel e rótulo em todos os botões, endereço e telefone `selectable`.
+- Botão **Como chegar** abre o app de mapas do aparelho (`geo:` / `maps:`), ADR 007.
+- Chave do Google Maps ainda não criada (pendência); 113 testes.
+
 ## O que a Aula 13 entregou — SMS e consolidação
 
 Branch `feat/aula13-sms`. Matriz de consolidação e regra dos três canais em
@@ -456,7 +467,7 @@ proj-clinica-aura/
         ├── Agenda/
         │   ├── SincronizarAgenda.js
         │   └── HistoricoSincronizacao.js
-        ├── Clinica/ComoChegar.js
+        ├── Clinica/MapaClinica.js
         ├── Consulta/
         │   ├── SinaisVitais.js
         │   ├── Consultas.js

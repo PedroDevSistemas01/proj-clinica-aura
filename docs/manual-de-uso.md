@@ -105,11 +105,15 @@ mandar leituras: toque em **Reconectar**.
 ## Ver como chegar à clínica
 
 1. No menu, toque em **Como chegar**.
-2. Toque em **Usar minha localização** e permita.
+2. O mapa abre mostrando a clínica. Toque no pino para ver nome, endereço
+   e telefone.
+3. Toque em **Onde estou?** (ou **Usar minha localização**) e permita. O
+   mapa passa a mostrar você e a clínica juntos, e aparecem a distância e o
+   tempo estimado. **Ver a clínica** volta o mapa para ela.
 
-Aparecem a distância e o tempo estimado. O endereço da clínica fica sempre
-na tela, mesmo sem permitir a localização. Para ver o caminho, toque em
-**Abrir no app de mapas**.
+O endereço e o telefone ficam sempre na tela, mesmo sem internet ou sem
+permitir a localização, e dá para copiá-los. Para ver o caminho, toque em
+**Como chegar**: abre o app de mapas do seu celular.
 
 ## Conferir se a agenda está atualizada
 

@@ -12,7 +12,7 @@ import CadastroEdicaoMedicoScreen from './src/screens/Medico/CadastroEdicaoMedic
 import Paciente from './src/screens/Paciente/Paciente';
 import CadastroEdicaoPacienteScreen from './src/screens/Paciente/CadastroEdicaoPacienteScreen';
 import SobreClinica from './src/screens/Sobre/SobreClinica';
-import ComoChegar from './src/screens/Clinica/ComoChegar';
+import MapaClinica from './src/screens/Clinica/MapaClinica';
 import SinaisVitais from './src/screens/Consulta/SinaisVitais';
 import Consultas from './src/screens/Consulta/Consultas';
 import AgendarConsulta from './src/screens/Consulta/AgendarConsulta';
@@ -115,7 +115,7 @@ export default function App() {
         <Stack.Screen name="Pacientes" component={Paciente} options={{ title: 'Pacientes' }} />
         <Stack.Screen name="CadastroEdicaoPaciente" component={CadastroEdicaoPacienteScreen} />
         <Stack.Screen name="SobreClinica" component={SobreClinica} options={{ title: 'Sobre a clínica' }} />
-        <Stack.Screen name="ComoChegar" component={ComoChegar} options={{ title: 'Como chegar' }} />
+        <Stack.Screen name="MapaClinica" component={MapaClinica} options={{ title: 'Como chegar' }} />
         <Stack.Screen name="SinaisVitais" component={SinaisVitais} options={{ title: 'Sinais vitais' }} />
         <Stack.Screen name="Consultas" component={Consultas} options={{ title: 'Consultas' }} />
         <Stack.Screen name="AgendarConsulta" component={AgendarConsulta} options={{ title: 'Agendar consulta' }} />

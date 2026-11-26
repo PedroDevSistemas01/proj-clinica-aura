@@ -13,11 +13,11 @@ Copy-Item .env.example .env
 |---|---|---|---|---|
 | Expo / EAS | development build, push, APK | Sim, para BLE, background e push | Grátis (plano Free) | `EAS_PROJECT_ID`, `ANDROID_PACKAGE` |
 | Firebase | entregar push no Android (FCM V1) | Só para push | Grátis | `GOOGLE_SERVICES_JSON` (arquivo) |
-| Google Cloud | chave do Google Maps (Aula 12) | Só quando o mapa for feito | Exige cartão; uso de laboratório fica na cota grátis | `GOOGLE_MAPS_API_KEY` |
+| Google Cloud | chave do Google Maps (Aula 12) | Sim, para o mapa no build do Android | Exige cartão; uso de laboratório fica na cota grátis | `GOOGLE_MAPS_API_KEY` |
 | Twilio **ou** Zenvia | SMS saindo de verdade pelo servidor | Não (o simulado cobre a aula) | Pago por mensagem | `SMS_PROVEDOR` + chaves do provedor |
 
-> Ordem recomendada: **1 → 2** (já libera dev build e push). A 3 só quando a
-> Aula 12 chegar. A 4 só se a clínica quiser SMS automático de verdade.
+> Ordem recomendada: **1 → 2** (já libera dev build e push). A 3 antes do
+> primeiro build do Android (sem ela o mapa fica cinza). A 4 só se a clínica quiser SMS automático de verdade.
 
 ---
 
@@ -83,8 +83,9 @@ O Expo Push Service entrega no Android através do Firebase Cloud Messaging.
 
 ## 3. Google Cloud (chave do Google Maps, Aula 12)
 
-O mapa da Aula 12 ainda não foi implementado; a chave já tem lugar no
-`app.config.js` (`android.config.googleMaps.apiKey`).
+O mapa da Aula 12 já existe (`src/screens/Clinica/MapaClinica.js`). No Expo Go
+ele funciona sem chave; no build próprio do Android, sem esta chave, fica
+cinza. A chave tem lugar no `app.config.js` (`android.config.googleMaps.apiKey`).
 
 1. <https://console.cloud.google.com> → crie um projeto e ative o
    faturamento (pede cartão; o uso de laboratório fica na cota gratuita

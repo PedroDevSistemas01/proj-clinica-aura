@@ -170,7 +170,7 @@ Pré-requisito: digital (ou rosto) cadastrada no aparelho.
    entrar com senha); aparelho sem digital cadastrada (o app cai no login
    com senha).
 
-### 3. GPS (Como chegar) — Aula 6
+### 3. Mapa e GPS (Como chegar) — Aulas 6 e 12
 
 Onde: **Menu → Como chegar**.
 
@@ -184,6 +184,21 @@ Onde: **Menu → Como chegar**.
    reinicie o `expo start` e confira que a distância passa a ser até lá.
    **Sobre a clínica** mostra "Definido na configuração do app". Apague as
    duas linhas depois.
+5. **Mapa (Aula 12):** a tela abre com o mapa na clínica. Toque no pino:
+   abre o balão com nome, endereço e telefone. **Onde estou?** enquadra
+   você e a clínica (com respiro nas bordas); **Ver a clínica** volta com
+   animação. Arraste o mapa: ele não "volta" sozinho.
+6. **Leitor de tela:** ligue o TalkBack (Android) ou VoiceOver (iOS) e
+   percorra a tela. O mapa deve ser anunciado como "Mapa mostrando a
+   localização da Clínica Aura..." e cada botão pelo que faz. Anote no
+   README o que precisou corrigir.
+7. **Sem rede:** desligue Wi-Fi e dados e reabra a tela. O mapa fica
+   cinza, mas endereço, telefone e o botão **Como chegar** continuam.
+8. **Como chegar:** toque e confira que o app de mapas do aparelho abre na
+   clínica.
+9. **Build próprio do Android:** sem `GOOGLE_MAPS_API_KEY`, o mapa fica
+   cinza com o logo do Google (esperado). Com a chave e um build novo, ele
+   aparece.
 
 ### 4. Lembrete local — Aula 8
 
