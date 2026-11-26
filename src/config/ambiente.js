@@ -26,3 +26,8 @@ export function urlOuNula(valor) {
   if (!/^https?:\/\/[^\s]+$/i.test(texto)) return null;
   return texto.replace(/\/+$/, '');
 }
+
+// Texto do .env -> booleano. Só "1", "true", "sim" ou "on" ligam.
+export function ligado(valor) {
+  return ['1', 'true', 'sim', 'on'].includes(String(valor ?? '').trim().toLowerCase());
+}

@@ -11,8 +11,29 @@
 //   EAS_PROJECT_ID       -> projectId do EAS; sem ele o token de push falha (Aula 9)
 //   GOOGLE_MAPS_API_KEY  -> chave do Maps SDK for Android (Aula 12, ADR 003)
 //   ANDROID_PACKAGE      -> identificador do app na loja (padrão abaixo)
+//   GOOGLE_SERVICES_JSON -> caminho do google-services.json do Firebase (push
+//                           no Android, FCM V1). Sem a variável, usa
+//                           ./google-services.json se o arquivo existir.
+//                           No EAS: secret do tipo arquivo (ver docs/CONTAS_E_CHAVES.md)
+//   API_URL, AUTH_API_URL -> endereço do json-server (3000) e da API de
+//                           autenticação (3001). No celular físico: IP da máquina.
+//   CLINICA_LATITUDE, CLINICA_LONGITUDE -> coordenadas da clínica
+//                           (padrão em src/config/clinica.js)
+//
+// Passo a passo das contas: docs/CONTAS_E_CHAVES.md
+
+const fs = require('fs');
+const path = require('path');
 
 const ANDROID_PACKAGE = process.env.ANDROID_PACKAGE || 'com.clinicaaura.app';
+
+// Firebase: o arquivo nunca vai para o Git (.gitignore). Sem ele o build
+// sai normalmente, só o push no Android não recebe nada.
+function arquivoFirebase() {
+  if (process.env.GOOGLE_SERVICES_JSON) return process.env.GOOGLE_SERVICES_JSON;
+  const local = path.join(__dirname, 'google-services.json');
+  return fs.existsSync(local) ? './google-services.json' : undefined;
+}
 
 module.exports = {
   expo: {
@@ -40,6 +61,7 @@ module.exports = {
     },
     android: {
       package: ANDROID_PACKAGE,
+      googleServicesFile: arquivoFirebase(),
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
@@ -55,6 +77,18 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     extra: {
+      // Lidos no app por src/config/ambiente.js. Vazio = padrão de laboratório.
+      apiUrl: process.env.API_URL || undefined,
+      authApiUrl: process.env.AUTH_API_URL || undefined,
+      clinica: {
+        latitude: process.env.CLINICA_LATITUDE || undefined,
+        longitude: process.env.CLINICA_LONGITUDE || undefined,
+      },
+      // Chaves de teste no aparelho (docs/TESTES_APARELHO.md). Só valem num
+      // development build; no Expo Go o código nativo não existe.
+      bluetoothReal: process.env.BLUETOOTH_REAL || undefined,
+      backgroundReal: process.env.BACKGROUND_REAL || undefined,
+      lembreteTesteMinutos: process.env.LEMBRETE_TESTE_MINUTOS || undefined,
       eas: {
         projectId: process.env.EAS_PROJECT_ID,
       },

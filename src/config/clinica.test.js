@@ -1,6 +1,6 @@
 // Coordenadas da clínica configuráveis pelo .env (dívida técnica da Aula 6).
 import { COORDENADAS_PADRAO, resolverCoordenadas } from './clinica';
-import { numeroOuNulo, urlOuNula } from './ambiente';
+import { ligado, numeroOuNulo, urlOuNula } from './ambiente';
 
 describe('resolverCoordenadas', () => {
   it('sem configuração, usa as coordenadas padrão', () => {
@@ -32,5 +32,13 @@ describe('leitura do .env', () => {
     expect(urlOuNula('http://192.168.0.10:3000/')).toBe('http://192.168.0.10:3000');
     expect(urlOuNula('ftp://x')).toBeNull();
     expect(urlOuNula('')).toBeNull();
+  });
+
+  it('ligado só aceita valores explícitos', () => {
+    expect(ligado('1')).toBe(true);
+    expect(ligado('TRUE')).toBe(true);
+    expect(ligado('')).toBe(false);
+    expect(ligado('0')).toBe(false);
+    expect(ligado(undefined)).toBe(false);
   });
 });

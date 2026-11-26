@@ -20,6 +20,7 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 
 import { decodificarFrequencia, frequenciaPlausivel } from './frequenciaCardiaca';
+import { lerExtra, ligado } from '../config/ambiente';
 
 export { decodificarFrequencia } from './frequenciaCardiaca';
 
@@ -28,8 +29,10 @@ export { decodificarFrequencia } from './frequenciaCardiaca';
 // false -> Bluetooth de verdade. EXIGE development build
 //          (npx expo run:android ou EAS Build): o Expo Go não tem o código
 //          nativo do react-native-ble-plx.
+// Desde o fechamento do projeto: BLUETOOTH_REAL=1 no .env liga o modo real
+// sem editar este arquivo (docs/TESTES_APARELHO.md).
 // ---------------------------------------------------------------------------
-export const MODO_SIMULADO = true;
+export const MODO_SIMULADO = !ligado(lerExtra().bluetoothReal);
 
 // A busca tem fim: escanear o tempo todo gasta bateria e o Android limita
 // quem inicia buscas demais em pouco tempo.

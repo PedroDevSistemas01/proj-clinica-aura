@@ -19,15 +19,19 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { formatarHora } from '../utils/dataHora';
+import { lerExtra, numeroOuNulo } from '../config/ambiente';
 
 // Canal do Android. O channelId do push (Aula 9) precisa bater com este.
 export const CANAL_LEMBRETES = 'lembretes-consulta';
 
 // Antecedência do lembrete. Para testar sem esperar uma hora (Passo 3, item
-// 16), troque ANTECEDENCIA_TESTE_MINUTOS para 1 e agende uma consulta para
-// daqui a 3 minutos. Volte para null antes do commit.
+// 16), ponha LEMBRETE_TESTE_MINUTOS=1 no .env e agende uma consulta para
+// daqui a 3 minutos. Apague do .env depois do teste.
 export const ANTECEDENCIA_MINUTOS = 60;
-const ANTECEDENCIA_TESTE_MINUTOS = null;
+const ANTECEDENCIA_TESTE_MINUTOS = (() => {
+  const minutos = numeroOuNulo(lerExtra().lembreteTesteMinutos);
+  return minutos !== null && minutos > 0 ? minutos : null;
+})();
 
 // Nome da tela que o toque abre (vai em content.data, Passo 2, item 11).
 export const TELA_DESTINO = 'DetalheConsulta';

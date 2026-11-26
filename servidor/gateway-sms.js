@@ -17,6 +17,7 @@
 // Quem chama este gateway e a NOSSA API (auth-api.js), nunca o app: a chave
 // abaixo so existe do lado do servidor.
 
+require('./carregar-env').carregarEnv(); // .env da raiz (o terminal vale mais)
 const http = require('http');
 const crypto = require('crypto');
 const path = require('path');

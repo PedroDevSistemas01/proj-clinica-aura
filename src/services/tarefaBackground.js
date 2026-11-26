@@ -20,8 +20,10 @@
 //   - nenhuma exceção escapa: a tarefa sempre devolve um resultado.
 
 import { backgroundLigado, sincronizarAgenda } from './sincronizacao';
+import { lerExtra, ligado } from '../config/ambiente';
 
-export const BACKGROUND_REAL = false;
+// false no Expo Go. BACKGROUND_REAL=1 no .env (development build) liga.
+export const BACKGROUND_REAL = ligado(lerExtra().backgroundReal);
 export const NOME_TAREFA = 'clinica-sincronizar-agenda';
 const INTERVALO_MINIMO_SEGUNDOS = 15 * 60; // MÍNIMO, não garantido
 

@@ -23,6 +23,7 @@
 //   - channelId igual ao canal criado no app ('lembretes-consulta');
 //   - texto sem dado sensivel: aparece na tela bloqueada.
 
+require('./carregar-env').carregarEnv(); // .env da raiz (o terminal vale mais)
 const API = process.env.API_URL || 'http://localhost:3000';
 const EXPO_SEND = 'https://exp.host/--/api/v2/push/send';
 const EXPO_RECEIPTS = 'https://exp.host/--/api/v2/push/getReceipts';

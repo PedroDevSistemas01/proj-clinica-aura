@@ -17,6 +17,10 @@
 //                    Aula 13: o app pede, ESTA API fala com o gateway
 //                    (servidor/gateway-sms.js, porta 3002). A chave do
 //                    gateway fica aqui, nunca no app.
+//                    Fechamento: SMS_PROVEDOR=simulado|twilio|zenvia escolhe
+//                    o destino (servidor/provedores-sms.js).
+//
+// Le o .env da raiz (servidor/carregar-env.js); o terminal continua valendo mais.
 //
 // ATENCAO - este servidor e didatico, NAO e um modelo de producao:
 //   - as senhas estao em texto puro no codigo (o certo e guardar um hash,
@@ -25,15 +29,16 @@
 //   - o servidor fala HTTP, nao HTTPS.
 // Cada um desses tres pontos e discutido no Momento 1.
 
+require('./carregar-env').carregarEnv();
+
 const http = require('http');
 const crypto = require('crypto');
+const { enviarPorProvedor, provedorAtual, ProvedorSmsErro } = require('./provedores-sms');
 
 const PORTA = 3001;
 
 // Aula 13 - SMS pelo servidor.
 const API_DADOS = process.env.API_DADOS_URL || 'http://localhost:3000';
-const GATEWAY_SMS = process.env.GATEWAY_SMS_URL || 'http://localhost:3002';
-const GATEWAY_SMS_KEY = process.env.GATEWAY_SMS_KEY || 'chave-de-laboratorio';
 let regrasSms = null; // src/services/regrasSms.js, carregado na primeira vez
 async function carregarRegrasSms() {
   if (!regrasSms) {
@@ -54,7 +59,7 @@ async function buscarDados(caminho) {
 }
 
 async function enviarSms(corpo) {
-  const { TIPOS_SMS, montarTextoSms, normalizarNumero } = await carregarRegrasSms();
+  const { TIPOS_SMS, montarTextoSms, normalizarNumero, avaliarTexto } = await carregarRegrasSms();
   if (!corpo || !corpo.consultaId || !TIPOS_SMS.includes(corpo.tipo)) {
     return [400, { erro: `Informe consultaId e tipo (${TIPOS_SMS.join(', ')}).` }];
   }
@@ -71,15 +76,15 @@ async function enviarSms(corpo) {
   const para = normalizarNumero(paciente && paciente.telefone);
   if (!para) return [422, { erro: 'O paciente nao tem um celular valido no cadastro.' }];
 
-  const r = await fetch(`${GATEWAY_SMS}/mensagens`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Api-Key': GATEWAY_SMS_KEY },
-    body: JSON.stringify({ para, texto: montarTextoSms(corpo.tipo, consulta.dataHora) }),
-  });
-  const resposta = await r.json().catch(() => ({}));
-  if (r.status !== 202) return [502, { erro: resposta.erro || `Gateway respondeu ${r.status}` }];
-  // O app recebe so o necessario; o numero completo nao volta.
-  return [202, { id: resposta.id, status: resposta.status, segmentos: resposta.segmentos, custo: resposta.custo }];
+  const texto = montarTextoSms(corpo.tipo, consulta.dataHora);
+  try {
+    // O app recebe so o necessario; o numero completo nao volta.
+    const resposta = await enviarPorProvedor({ para, texto }, avaliarTexto(texto));
+    return [202, resposta];
+  } catch (e) {
+    if (e instanceof ProvedorSmsErro) return [e.status, { erro: e.message }];
+    throw e;
+  }
 }
 
 // "Banco" de usuarios da clinica. Em producao: hash da senha, nunca o texto.
@@ -193,4 +198,5 @@ servidor.listen(PORTA, '0.0.0.0', () => {
   console.log(`API de autenticação da clínica em http://localhost:${PORTA}`);
   console.log('Usuários de teste:');
   USUARIOS.forEach((u) => console.log(`  ${u.email} / ${u.senha}`));
+  console.log(`Provedor de SMS: ${provedorAtual()}${provedorAtual() === 'simulado' ? ' (nada sai de verdade)' : ' (ENVIO REAL, com custo)'}`);
 });

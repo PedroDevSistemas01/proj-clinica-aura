@@ -6,4 +6,7 @@ web-build/
 .DS_Store
 .env
 .env.local
+# Firebase (Aula 9): credencial do projeto, nunca no Git
+google-services.json
+GoogleService-Info.plist
 coverage/

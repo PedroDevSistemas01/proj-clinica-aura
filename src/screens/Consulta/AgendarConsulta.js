@@ -70,7 +70,7 @@ export default function AgendarConsulta({ route, navigation }) {
   }, [navigation]);
 
   // Atalho de teste (item 16): consulta daqui a 3 minutos. Com
-  // ANTECEDENCIA_TESTE_MINUTOS = 1 no lembretes.js, o aviso chega em 2 min.
+  // LEMBRETE_TESTE_MINUTOS=1 no .env, o aviso chega em 2 min.
   function preencherDaquiATresMinutos() {
     const daqui = new Date(Date.now() + 3 * 60 * 1000);
     setTextoData(formatarData(daqui));
