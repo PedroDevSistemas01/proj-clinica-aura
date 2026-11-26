@@ -13,7 +13,9 @@
     "push": "node servidor/enviar-push.js",
     "gerar-consultas": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON servidor/gerar-consultas.js",
     "medir": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/medir-conflitos.mjs",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"tests/*.test.mjs\""
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -38,7 +40,11 @@
     "react-native-screens": "3.31.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.0"
+    "@babel/core": "^7.24.0",
+    "@testing-library/react-native": "^13.3.3",
+    "jest": "^29.4.0",
+    "jest-expo": "~51.0.4",
+    "react-test-renderer": "18.2.0"
   },
   "private": true
 }
