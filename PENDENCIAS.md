@@ -1,4 +1,4 @@
-# Pendências do projeto (atualizado na Aula 14)
+# Pendências do projeto (atualizado na Aula 15)
 
 Lista única do que ficou em aberto até aqui. Cada item aponta onde está o detalhe.
 
@@ -9,7 +9,7 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [ ] **Demonstrar a Aula 10 no aparelho:** indicador congelando no ingênuo e animando no fatiado, contador de toques subindo durante a verificação e as medições do celular na tabela de `docs/aula10-checklist-responsividade.md`.
 - [ ] **Tarefa em background no aparelho (Aula 11):** `BACKGROUND_REAL = true` em `src/services/tarefaBackground.js`, development build e conferir no histórico uma entrada com origem `background`. A primeira execução espontânea pode demorar horas. Roteiro: `docs/aula11-background.md`.
 - [ ] **Conferir câmera, biometria e GPS num celular (Aula 6):** os itens abertos estão em `docs/aula6-checklist-perifericos.md`.
-- [ ] **Development build para push (Aula 9):** conta Expo/EAS (`eas init` preenche `extra.eas.projectId`), `android.package` no `app.json`, projeto Firebase com credencial FCM V1 (`eas credentials`) e um aparelho Android (ADR 004). O mesmo build serve ao Bluetooth real. Sem isso o código está pronto, mas nenhum push foi recebido de verdade: só o envio com token inventado foi conferido (`HTTP 200` + `DeviceNotRegistered`). Roteiro: `docs/aula9-checklist-push.md`.
+- [ ] **Development build para push (Aula 9):** conta Expo/EAS (`eas init`; o `projectId` vai em `EAS_PROJECT_ID` no `.env`, lido pelo `app.config.js`), confirmar o `ANDROID_PACKAGE` (padrão `com.clinicaaura.app`), `npx expo install expo-dev-client` para o perfil `development` do `eas.json`, projeto Firebase com credencial FCM V1 (`eas credentials`) e um aparelho Android (ADR 004). O mesmo build serve ao Bluetooth real. Sem isso o código está pronto, mas nenhum push foi recebido de verdade: só o envio com token inventado foi conferido (`HTTP 200` + `DeviceNotRegistered`). Roteiro: `docs/aula9-checklist-push.md`.
 
 ## Precisa de conta, chave ou decisão da squad
 
@@ -21,6 +21,13 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [x] ~~**Integração na `main`**~~: as Aulas 5 a 11 já estão na `main`. A Aula 11 entrou pelo PR #5 e levou junto as Aulas 8, 9 e 10, que estavam empilhadas nela.
 - [ ] **Revisão cruzada da Aula 8:** conferir que nenhuma tela importa `expo-notifications`, que cancelar a consulta cancela o lembrete e que o texto não expõe dado sensível.
 - [ ] **Nomes da squad:** o README e os ADRs ainda usam "Luiz" como responsável e têm placeholders de integrantes.
+
+## Build e documentação (Aula 15)
+
+- [ ] **Nenhum build gerado ainda:** `eas.json` tem os perfis `development`, `preview` e `production` (com `autoIncrement` e `appVersionSource: remote`), mas falta a conta EAS para rodar `eas build`. Para a Aula 16, o perfil `preview` gera um APK que instala direto.
+- [ ] **Roteiro da Aula 15 não recebido:** só vieram o modelo de README técnico (A15_03) e o gabarito dos exercícios (A15_10). O README técnico, o manual de uso (`docs/manual-de-uso.md`), o `app.config.js` e o `eas.json` seguem esses dois.
+- [ ] **Endereço da API em produção:** `src/services/api.js` ainda aponta para `localhost` em HTTP.
+- [ ] **Equipe no README:** dois integrantes ainda são placeholders.
 
 ## Dívidas técnicas conscientes
 

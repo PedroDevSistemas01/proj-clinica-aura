@@ -82,7 +82,7 @@ trânsito e meio de transporte. Tempo de verdade exigiria um serviço de rotas
 | Permissão | Por que é necessária (uma frase) | Explicamos antes do pop-up? |
 | --- | --- | --- |
 | Câmera | Para tirar a foto de perfil de médicos e pacientes, e só quando a pessoa toca em "Tirar foto". | Sim: Alert "Acesso à câmera" antes do pedido do sistema. |
-| Galeria | Para escolher uma foto existente quando não se quer usar a câmera; o seletor do sistema não exige permissão nas versões recentes. | Sim, pelo texto do `app.json`. |
+| Galeria | Para escolher uma foto existente quando não se quer usar a câmera; o seletor do sistema não exige permissão nas versões recentes. | Sim, pelo texto do `app.json` (desde a Aula 15, `app.config.js`). |
 | Biometria (Face ID no iOS) | Para destrancar a sessão já existente sem digitar a senha; o dado biométrico nunca sai do aparelho. | Sim: a tela diz isso no rodapé. |
 | Localização (só em uso) | Para calcular a distância até a clínica enquanto a tela "Como chegar" está aberta; não é gravada nem enviada. | Sim: cartão "Usar minha localização" com a explicação. |
 
