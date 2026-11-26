@@ -11,6 +11,7 @@
 // resposta.ok: elas chamam get / post / put / remover daqui.
 
 import { obterToken, limparToken } from './sessao';
+import { lerExtra, urlOuNula } from '../config/ambiente';
 
 // ---------------------------------------------------------------------------
 // DECISÃO DE SQUAD (Passo 4, item 18) — anotem no README qual endereço vale.
@@ -25,15 +26,21 @@ import { obterToken, limparToken } from './sessao';
 //
 // Deixamos 3000 como padrão para o CRUD da Aula 3 continuar funcionando; o
 // padrão de mandar o token já fica pronto para a API real (que exigirá HTTPS).
-// Em celular físico (Expo Go), troque 'localhost' pelo IP da máquina.
+// Em celular físico, use o IP da máquina no lugar de 'localhost'.
+//
+// Desde o fechamento do projeto o endereço vem do .env (API_URL e
+// AUTH_API_URL, levados pelo app.config.js para extra). Não é mais preciso
+// editar este arquivo para testar no celular nem para apontar para a API de
+// produção (que deve ser HTTPS). Sem valor no .env, vale o padrão abaixo.
 // ---------------------------------------------------------------------------
-export const BASE_URL = 'http://localhost:3000';
+const extra = lerExtra();
+export const BASE_URL = urlOuNula(extra.apiUrl) ?? 'http://localhost:3000';
 
 // API de autenticação (Node puro, porta 3001). Além do login, é ela que
 // recebe o pedido de SMS (Aula 13) e fala com o gateway: a credencial do
-// gateway fica no servidor, nunca no app. Em celular físico, troque
-// 'localhost' pelo IP da máquina aqui também.
-export const AUTH_BASE_URL = 'http://localhost:3001';
+// gateway fica no servidor, nunca no app. Em celular físico, defina
+// AUTH_API_URL no .env com o IP da máquina.
+export const AUTH_BASE_URL = urlOuNula(extra.authApiUrl) ?? 'http://localhost:3001';
 
 // Erro próprio para o 401. Deixa a tela distinguir "a sessão acabou" de
 // "deu ruim na rede" (Passo 4, item 14).

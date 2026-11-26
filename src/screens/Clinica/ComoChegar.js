@@ -51,9 +51,11 @@ export default function ComoChegar() {
   const [posicaoAnterior, setPosicaoAnterior] = useState(false);
   const [destino, setDestino] = useState(CLINICA.coordenadas);
 
-  // Coordenadas da clínica: as do geocoding (Aula 5) quando já estão no
-  // cache; senão, as escritas em config/clinica.js.
+  // Coordenadas da clínica: se vieram do .env (CLINICA_LATITUDE/LONGITUDE),
+  // elas mandam. Senão, as do geocoding (Aula 5) quando já estão no cache; e,
+  // na falta delas, as de reserva de config/clinica.js.
   useEffect(() => {
+    if (CLINICA.origemCoordenadas === 'configuracao') return;
     lerCoordenadasEmCache(endereco).then((emCache) => {
       if (emCache) setDestino(emCache);
     });

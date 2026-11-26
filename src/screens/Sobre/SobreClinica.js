@@ -32,6 +32,13 @@ export default function SobreClinica() {
     async ({ ignorarCache = false } = {}) => {
       setCarregando(true);
       setAviso(null);
+      // Coordenadas definidas no .env: não há o que perguntar ao Nominatim.
+      if (CLINICA.origemCoordenadas === 'configuracao') {
+        setCoordenadas(CLINICA.coordenadas);
+        setDoCache(false);
+        setCarregando(false);
+        return;
+      }
       try {
         const resultado = await obterCoordenadasClinica(endereco, { ignorarCache });
         setCoordenadas(resultado.coordenadas);
@@ -91,7 +98,11 @@ export default function SobreClinica() {
               <Text style={styles.valor}>Latitude: {coordenadas.latitude.toFixed(6)}</Text>
               <Text style={styles.valor}>Longitude: {coordenadas.longitude.toFixed(6)}</Text>
               <Text style={styles.textoFraco}>
-                {doCache ? 'Guardado neste aparelho.' : 'Consultado agora.'}
+                {CLINICA.origemCoordenadas === 'configuracao'
+                  ? 'Definido na configuração do app.'
+                  : doCache
+                    ? 'Guardado neste aparelho.'
+                    : 'Consultado agora.'}
               </Text>
             </>
           ) : null}

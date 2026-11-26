@@ -39,3 +39,12 @@ jest.mock('expo-notifications', () => ({
 
 // Emulador/teste: não é aparelho físico (o push devolve o motivo e segue).
 jest.mock('expo-device', () => ({ isDevice: false }));
+
+// Sistema de arquivos (fotos de perfil fora do cache): pasta permanente falsa.
+jest.mock('expo-file-system', () => ({
+  documentDirectory: 'file:///documentos/',
+  getInfoAsync: jest.fn(async () => ({ exists: true })),
+  makeDirectoryAsync: jest.fn(async () => undefined),
+  copyAsync: jest.fn(async () => undefined),
+  deleteAsync: jest.fn(async () => undefined),
+}));

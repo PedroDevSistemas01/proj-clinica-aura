@@ -21,10 +21,10 @@ import { rotasAposEntrar } from '../../services/navegacao';
 // e, no sucesso, entra no app com navigation.reset (não navigate) — assim o
 // gesto de "voltar" não devolve o usuário para o Login.
 
-// URL da API de AUTENTICAÇÃO (Aula 4) — sempre na 3001, porque o json-server
-// (3000) não tem /login. Em celular físico com Expo Go, troque 'localhost'
-// pelo IP da máquina (ipconfig -> IPv4 do Wi-Fi). No emulador Android: 10.0.2.2.
-// Endereço único da API de autenticação, definido no api.js (Aula 13).
+// URL da API de AUTENTICAÇÃO (Aula 4) — na 3001, porque o json-server
+// (3000) não tem /login. Endereço único, definido no api.js (Aula 13) e
+// configurável por AUTH_API_URL no .env (celular físico: IP da máquina,
+// ipconfig -> IPv4 do Wi-Fi; emulador Android: 10.0.2.2).
 const AUTH_URL = AUTH_BASE_URL;
 
 // Para onde ir depois de logar. É o nome da rota principal no Stack.Navigator.

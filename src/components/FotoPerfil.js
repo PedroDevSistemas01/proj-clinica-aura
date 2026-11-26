@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
+import { guardarFoto } from '../services/fotos';
 import { cores, espaco } from '../theme';
 
 // Campo de foto de perfil (Aula 6, Passo 2).
@@ -20,9 +21,10 @@ import { cores, espaco } from '../theme';
 // expo-image-picker (e não expo-camera): para um campo de formulário basta
 // abrir a câmera do sistema e receber a foto de volta.
 //
-// Dívida técnica consciente: o que guardamos é a URI, um endereço que aponta
-// para o CACHE do app. Se o sistema limpar o cache, a foto some. Resolver de
-// verdade exige upload para o servidor (extensão da aula).
+// A câmera e a galeria devolvem uma URI no CACHE do app, que o sistema pode
+// limpar. Antes de entregar a foto ao formulário, ela é copiada para a pasta
+// permanente do app (src/services/fotos.js). Ainda pendente: upload para o
+// servidor, para a foto aparecer em outro aparelho.
 
 const OPCOES_CAMERA = {
   allowsEditing: true,
@@ -96,7 +98,7 @@ export default function FotoPerfil({ uri, nome, onChange, desabilitado = false }
       // "Cannot read property uri of undefined".
       if (resultado.canceled || !resultado.assets?.length) return;
 
-      onChange(resultado.assets[0].uri);
+      onChange(await guardarFoto(resultado.assets[0].uri));
     } catch (e) {
       // Emulador sem câmera, câmera ocupada por outro app...
       console.log('Falha ao abrir a câmera.');
@@ -113,7 +115,7 @@ export default function FotoPerfil({ uri, nome, onChange, desabilitado = false }
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
       });
       if (resultado.canceled || !resultado.assets?.length) return;
-      onChange(resultado.assets[0].uri);
+      onChange(await guardarFoto(resultado.assets[0].uri));
     } catch (e) {
       console.log('Falha ao abrir a galeria.');
       Alert.alert('Galeria indisponível', 'Não foi possível abrir a galeria.');

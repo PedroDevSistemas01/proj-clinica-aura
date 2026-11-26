@@ -78,6 +78,9 @@ describe('Cadastro de médico com a câmera', () => {
 
     await fireEvent.press(screen.getByTestId('botao-foto'));
 
-    expect(await screen.findByTestId('foto-perfil')).toBeOnTheScreen();
+    const foto = await screen.findByTestId('foto-perfil');
+    expect(foto).toBeOnTheScreen();
+    // A foto saiu do cache e foi para a pasta permanente do app.
+    expect(foto.props.source.uri).toMatch(/^file:\/\/\/documentos\/fotos-perfil\//);
   });
 });
