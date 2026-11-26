@@ -1,4 +1,4 @@
-# Pendências do projeto (atualizado na Aula 11)
+# Pendências do projeto (atualizado na Aula 13)
 
 Lista única do que ficou em aberto até aqui. Cada item aponta onde está o detalhe.
 
@@ -14,8 +14,12 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 ## Precisa de conta, chave ou decisão da squad
 
 - [ ] **Chave do Google Maps (Aula 12, até 22/10/2026):** conta Google Cloud com faturamento, chave restrita ao pacote do app, guardada no `.env` (ADR 003).
-- [ ] **SMS (Aula 13):** aparelho com chip para testar o `expo-sms`; gateway (Zenvia ou Twilio) só se a clínica quiser confirmação automática (ADR 005).
-- [ ] **Revisão cruzada e Pull Requests:** as branches das Aulas 5 a 11 estão no GitHub (Aulas 8 a 11 empilhadas: `feat/aula8-notificacoes-locais` → `feat/aula9-push` → `feat/aula10-responsividade` → `feat/aula11-background`), mas nenhuma foi revisada nem integrada na `main`. Na revisão da Aula 8, conferir: nenhuma tela importa `expo-notifications`, cancelar a consulta cancela o lembrete e o texto não expõe dado sensível.
+- [ ] **SMS no aparelho (Aula 13):** celular com chip para ver o app de mensagens abrir com o texto pronto. O envio pelo servidor usa um gateway **simulado**: nenhuma mensagem sai de verdade. Gateway real (Zenvia ou Twilio, ADR 005) só se a clínica quiser, com a chave no `.env` do servidor.
+- [ ] **Percorrer o fluxo inteiro num aparelho (Aula 13):** a lista de `docs/aula13-problemas-fluxo.md` foi feita lendo o código e com `curl`, sem aparelho.
+- [ ] **Dividir os responsáveis (Aula 13):** a matriz de consolidação tem todos os recursos com o mesmo responsável.
+- [ ] **Mapa da Aula 12:** não implementado; o material da Aula 12 não foi recebido. Quebra a etapa 3 do fluxo do desafio.
+- [x] ~~**Integração na `main`**~~: as Aulas 5 a 11 já estão na `main`. A Aula 11 entrou pelo PR #5 e levou junto as Aulas 8, 9 e 10, que estavam empilhadas nela.
+- [ ] **Revisão cruzada da Aula 8:** conferir que nenhuma tela importa `expo-notifications`, que cancelar a consulta cancela o lembrete e que o texto não expõe dado sensível.
 - [ ] **Nomes da squad:** o README e os ADRs ainda usam "Luiz" como responsável e têm placeholders de integrantes.
 
 ## Dívidas técnicas conscientes
@@ -32,6 +36,10 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [x] ~~**Última verificação não fica guardada (Aula 10)**~~: resolvido na Aula 11. A tela de Sincronização abre com o último resultado gravado em disco. A tela de conflitos da Aula 10 continua sem ele.
 - [ ] **Biblioteca de background do SDK 51 (Aula 11):** usamos `expo-background-fetch` porque o `expo-background-task` só existe no SDK 53+. Ao subir de SDK: trocar a biblioteca, mudar `minimumInterval` de segundos para minutos e usar o gatilho de teste dela. Atenção: no SDK 53+ o push deixa de funcionar no Expo Go no Android.
 - [ ] **Sincronização baixa tudo (Aula 11):** `GET /consultas` inteiro a cada execução. Em rede móvel isso custa ao usuário; filtrar por período quando a API permitir.
+- [ ] **Abrir o app não sincroniza (Aula 13, P2):** a sincronização só dispara ao voltar do segundo plano, não na abertura a frio.
+- [ ] **Sessão meio viva (Aula 13, P3):** sessões da API de autenticação ficam em memória; reiniciá-la deixa o token velho valendo no json-server e só o SMS devolve ao login.
+- [ ] **SMS de cancelamento com dados do app (Aula 13, P4):** como a consulta já foi apagada, o app manda `pacienteId` e `dataHora`; o número vem do cadastro. Com API real, o cancelamento deveria ser lógico (status) e o servidor enviaria sozinho.
+- [ ] **Status do SMS não volta para o app (Aula 13):** o app mostra "enfileirado"; consultar `GET /mensagens/:id` do gateway pela nossa API ficaria para uma próxima versão.
 - [ ] **Antecedência fixa (Aula 8):** 1 hora para todos. Extensões não feitas: paciente escolher (1 hora / 1 dia) e segundo lembrete na véspera.
 - [ ] **Data digitada à mão (Aula 8):** o agendamento usa campos DD/MM/AAAA e HH:MM; um seletor de data nativo exigiria mais uma biblioteca.
 - [ ] **Biometria ativa para todos:** oferecer como opção nos ajustes do app (extensão da Aula 6).

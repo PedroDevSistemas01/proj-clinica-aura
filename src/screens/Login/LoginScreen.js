@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { salvarToken, salvarUsuario } from '../../services/sessao';
+import { AUTH_BASE_URL } from '../../services/api';
 import { cores, espaco } from '../../theme';
 import { rotasAposEntrar } from '../../services/navegacao';
 
@@ -22,7 +23,8 @@ import { rotasAposEntrar } from '../../services/navegacao';
 // URL da API de AUTENTICAÇÃO (Aula 4) — sempre na 3001, porque o json-server
 // (3000) não tem /login. Em celular físico com Expo Go, troque 'localhost'
 // pelo IP da máquina (ipconfig -> IPv4 do Wi-Fi). No emulador Android: 10.0.2.2.
-const AUTH_URL = 'http://localhost:3001';
+// Endereço único da API de autenticação, definido no api.js (Aula 13).
+const AUTH_URL = AUTH_BASE_URL;
 
 // Para onde ir depois de logar. É o nome da rota principal no Stack.Navigator.
 const ROTA_INICIAL = 'Menu';

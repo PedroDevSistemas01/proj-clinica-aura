@@ -106,6 +106,14 @@ export default function DetalheConsulta({ route, navigation }) {
       >
         <Text style={styles.botaoTexto}>Remarcar</Text>
       </TouchableOpacity>
+
+      {/* Aula 13: confirmação por SMS (a recepção escolhe o caminho). */}
+      <TouchableOpacity
+        style={[styles.botao, styles.margem]}
+        onPress={() => navigation.navigate('EnviarSms', { consulta, tipo: 'confirmacao' })}
+      >
+        <Text style={styles.botaoTexto}>Enviar SMS de confirmação</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

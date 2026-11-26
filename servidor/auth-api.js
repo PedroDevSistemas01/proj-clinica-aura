@@ -12,6 +12,11 @@
 //   POST /login      { email, senha }  -> 200 { token, usuario } | 401
 //   GET  /medicos    (Authorization: Bearer <token>) -> 200 [...] | 401
 //   GET  /perfil     (Authorization: Bearer <token>) -> 200 {...} | 401
+//   POST /sms        (Bearer) { consultaId, tipo, pacienteId?, dataHora? }
+//                    -> 202 { id, status: 'enfileirada', segmentos, custo }
+//                    Aula 13: o app pede, ESTA API fala com o gateway
+//                    (servidor/gateway-sms.js, porta 3002). A chave do
+//                    gateway fica aqui, nunca no app.
 //
 // ATENCAO - este servidor e didatico, NAO e um modelo de producao:
 //   - as senhas estao em texto puro no codigo (o certo e guardar um hash,
@@ -24,6 +29,58 @@ const http = require('http');
 const crypto = require('crypto');
 
 const PORTA = 3001;
+
+// Aula 13 - SMS pelo servidor.
+const API_DADOS = process.env.API_DADOS_URL || 'http://localhost:3000';
+const GATEWAY_SMS = process.env.GATEWAY_SMS_URL || 'http://localhost:3002';
+const GATEWAY_SMS_KEY = process.env.GATEWAY_SMS_KEY || 'chave-de-laboratorio';
+let regrasSms = null; // src/services/regrasSms.js, carregado na primeira vez
+async function carregarRegrasSms() {
+  if (!regrasSms) {
+    const path = require('path');
+    const { pathToFileURL } = require('url');
+    regrasSms = await import(
+      pathToFileURL(path.join(__dirname, '..', 'src', 'services', 'regrasSms.js')).href
+    );
+  }
+  return regrasSms;
+}
+
+async function buscarDados(caminho) {
+  const r = await fetch(`${API_DADOS}${caminho}`);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`API de dados respondeu ${r.status}`);
+  return r.json();
+}
+
+async function enviarSms(corpo) {
+  const { TIPOS_SMS, montarTextoSms, normalizarNumero } = await carregarRegrasSms();
+  if (!corpo || !corpo.consultaId || !TIPOS_SMS.includes(corpo.tipo)) {
+    return [400, { erro: `Informe consultaId e tipo (${TIPOS_SMS.join(', ')}).` }];
+  }
+
+  // A consulta vem do servidor. No cancelamento ela ja foi apagada; ai vale
+  // o pacienteId/dataHora enviados, mas o NUMERO sempre sai do cadastro.
+  let consulta = await buscarDados(`/consultas/${encodeURIComponent(corpo.consultaId)}`);
+  if (!consulta && corpo.tipo === 'cancelamento' && corpo.pacienteId && corpo.dataHora) {
+    consulta = { pacienteId: corpo.pacienteId, dataHora: corpo.dataHora };
+  }
+  if (!consulta) return [404, { erro: 'Consulta nao encontrada.' }];
+
+  const paciente = await buscarDados(`/pacientes/${encodeURIComponent(consulta.pacienteId)}`);
+  const para = normalizarNumero(paciente && paciente.telefone);
+  if (!para) return [422, { erro: 'O paciente nao tem um celular valido no cadastro.' }];
+
+  const r = await fetch(`${GATEWAY_SMS}/mensagens`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Api-Key': GATEWAY_SMS_KEY },
+    body: JSON.stringify({ para, texto: montarTextoSms(corpo.tipo, consulta.dataHora) }),
+  });
+  const resposta = await r.json().catch(() => ({}));
+  if (r.status !== 202) return [502, { erro: resposta.erro || `Gateway respondeu ${r.status}` }];
+  // O app recebe so o necessario; o numero completo nao volta.
+  return [202, { id: resposta.id, status: resposta.status, segmentos: resposta.segmentos, custo: resposta.custo }];
+}
 
 // "Banco" de usuarios da clinica. Em producao: hash da senha, nunca o texto.
 const USUARIOS = [
@@ -102,6 +159,19 @@ const servidor = http.createServer(async (req, res) => {
       token,
       usuario: { id: usuario.id, nome: usuario.nome, perfil: usuario.perfil },
     });
+  }
+
+  // ------------------------------------------------------- SMS (Aula 13)
+  if (req.method === 'POST' && req.url === '/sms') {
+    if (!usuarioDoToken(req)) return json(res, 401, { erro: 'Token ausente ou inválido.' });
+    const corpo = await lerCorpo(req);
+    try {
+      const [status, resposta] = await enviarSms(corpo);
+      return json(res, status, resposta);
+    } catch (e) {
+      console.log(`  falha no envio de SMS: ${e.message}`);
+      return json(res, 502, { erro: 'Nao foi possivel falar com a API de dados ou o gateway.' });
+    }
   }
 
   // ------------------------------------------------------- ROTAS PROTEGIDAS

@@ -100,6 +100,15 @@ export default function Consultas({ navigation }) {
       await remover(`/consultas/${consulta.id}`);
       await cancelarLembrete(consulta.id);
       await buscarConsultas();
+      // Aula 13, item 16: ao cancelar, oferecer o SMS de cancelamento. É uma
+      // oferta, não um envio automático: SMS custa e não se desfaz.
+      Alert.alert('Consulta cancelada', 'O lembrete deste aparelho foi cancelado. Avisar o paciente por SMS?', [
+        { text: 'Agora não', style: 'cancel' },
+        {
+          text: 'Avisar por SMS',
+          onPress: () => navigation.navigate('EnviarSms', { consulta, tipo: 'cancelamento' }),
+        },
+      ]);
     } catch (e) {
       if (e instanceof SessaoExpirada) {
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] });

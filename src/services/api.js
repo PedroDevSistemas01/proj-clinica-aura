@@ -29,6 +29,12 @@ import { obterToken, limparToken } from './sessao';
 // ---------------------------------------------------------------------------
 export const BASE_URL = 'http://localhost:3000';
 
+// API de autenticação (Node puro, porta 3001). Além do login, é ela que
+// recebe o pedido de SMS (Aula 13) e fala com o gateway: a credencial do
+// gateway fica no servidor, nunca no app. Em celular físico, troque
+// 'localhost' pelo IP da máquina aqui também.
+export const AUTH_BASE_URL = 'http://localhost:3001';
+
 // Erro próprio para o 401. Deixa a tela distinguir "a sessão acabou" de
 // "deu ruim na rede" (Passo 4, item 14).
 export class SessaoExpirada extends Error {
@@ -54,7 +60,10 @@ export async function requisicao(caminho, opcoes = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const resposta = await fetch(`${BASE_URL}${caminho}`, { ...opcoes, headers });
+  // Caminho relativo vai para a API de dados; endereço completo (ex.: a API
+  // de autenticação, no SMS da Aula 13) é usado como veio.
+  const url = /^https?:\/\//.test(caminho) ? caminho : `${BASE_URL}${caminho}`;
+  const resposta = await fetch(url, { ...opcoes, headers });
 
   // 401: sessão morta. Limpa o cofre e sinaliza com o erro próprio (item 14).
   if (resposta.status === 401) {
