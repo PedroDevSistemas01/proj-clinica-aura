@@ -139,15 +139,16 @@ export default function FotoPerfil({ uri, nome, onChange, desabilitado = false }
   return (
     <View style={styles.container}>
       <TouchableOpacity
+        testID="botao-foto"
         onPress={escolherFoto}
         disabled={desabilitado}
         accessibilityRole="button"
         accessibilityLabel={uri ? 'Trocar foto de perfil' : 'Adicionar foto de perfil'}
       >
         {uri ? (
-          <Image source={{ uri }} style={styles.foto} />
+          <Image source={{ uri }} style={styles.foto} testID="foto-perfil" />
         ) : (
-          <View style={[styles.foto, styles.espacoReservado]}>
+          <View style={[styles.foto, styles.espacoReservado]} testID="foto-vazia">
             <Text style={styles.iniciais}>{iniciais(nome)}</Text>
           </View>
         )}

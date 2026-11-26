@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { cores, espaco } from '../theme';
 import { cepValido, consultarCep, somenteDigitosCep } from '../services/viacep';
 import FotoPerfil from './FotoPerfil';
+import { validarPaciente } from '../regras';
 
 const CAMPOS = [
   { chave: 'nome', rotulo: 'Nome completo', placeholder: 'Helena Ribeiro' },
@@ -147,8 +148,9 @@ export default function PacienteForm({ paciente, onSave }) {
   }
 
   async function handleSubmit() {
-    if (!formData.nome.trim() || !formData.cpf.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha ao menos o nome e o CPF.');
+    const problema = validarPaciente(formData); // Aula 14: regra em src/regras.js
+    if (problema) {
+      Alert.alert('Campos obrigatórios', problema);
       return;
     }
 
@@ -174,6 +176,7 @@ export default function PacienteForm({ paciente, onSave }) {
       <View key={campo.chave} style={styles.grupo}>
         <Text style={styles.rotulo}>{campo.rotulo}</Text>
         <TextInput
+          testID={`campo-${campo.chave}`}
           style={styles.campo}
           value={formData[campo.chave]}
           onChangeText={(valor) =>
@@ -213,6 +216,7 @@ export default function PacienteForm({ paciente, onSave }) {
           <Text style={styles.rotulo}>CEP</Text>
           <View style={styles.linhaCep}>
             <TextInput
+              testID="campo-cep"
               style={[styles.campo, styles.campoCep]}
               value={formData.cep}
               onChangeText={(valor) => atualizarCampo('cep', formatarCep(valor))}
@@ -236,6 +240,7 @@ export default function PacienteForm({ paciente, onSave }) {
         {CAMPOS_ENDERECO.map(renderizarCampo)}
 
         <TouchableOpacity
+          testID="botao-salvar"
           style={[styles.botao, (salvando || consultandoCep) && styles.botaoDesabilitado]}
           onPress={handleSubmit}
           disabled={salvando || consultandoCep}

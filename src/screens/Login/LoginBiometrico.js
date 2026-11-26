@@ -122,7 +122,7 @@ export default function LoginBiometrico({ navigation }) {
 
   if (estado === null) {
     return (
-      <View style={styles.carregando}>
+      <View style={styles.carregando} testID="carregando">
         <ActivityIndicator size="large" color={cores.primaria} />
       </View>
     );
@@ -131,7 +131,7 @@ export default function LoginBiometrico({ navigation }) {
   const podeUsarBiometria = estado.temSensor && estado.cadastrada;
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-login-biometrico">
       <View style={styles.container}>
         <Text style={styles.titulo}>Clínica Aura</Text>
         <Text style={styles.subtitulo}>Bem-vindo de volta</Text>
@@ -139,6 +139,7 @@ export default function LoginBiometrico({ navigation }) {
         {podeUsarBiometria ? (
           // Botão só aparece com sensor, biometria cadastrada e token (item 14).
           <TouchableOpacity
+            testID="botao-biometria"
             style={[styles.botao, autenticando && styles.botaoDesabilitado]}
             onPress={entrarComBiometria}
             disabled={autenticando}
@@ -149,7 +150,7 @@ export default function LoginBiometrico({ navigation }) {
           </TouchableOpacity>
         ) : (
           // Mensagem diz QUAL dos dois é o caso.
-          <Text style={styles.info}>
+          <Text style={styles.info} testID="mensagem-sem-biometria">
             {estado.temSensor
               ? 'Este aparelho tem sensor biométrico, mas nenhuma biometria está cadastrada nos ajustes do sistema. Cadastre uma para entrar sem senha da próxima vez.'
               : 'Este aparelho não tem sensor biométrico. Entre com e-mail e senha.'}
@@ -157,13 +158,13 @@ export default function LoginBiometrico({ navigation }) {
         )}
 
         {mensagem && (
-          <Text style={mensagem.tipo === 'erro' ? styles.erro : styles.neutra}>
+          <Text testID="mensagem-erro" style={mensagem.tipo === 'erro' ? styles.erro : styles.neutra}>
             {mensagem.texto}
           </Text>
         )}
 
         {/* Sempre visível: biometria é atalho, nunca requisito (item 17). */}
-        <TouchableOpacity style={styles.link} onPress={irParaLoginComSenha}>
+        <TouchableOpacity testID="botao-entrar-com-senha" style={styles.link} onPress={irParaLoginComSenha}>
           <Text style={styles.linkTexto}>Entrar com e-mail e senha</Text>
         </TouchableOpacity>
 

@@ -20,7 +20,7 @@
 - [x] As duas expõem a mesma interface: `procurar`, `pararBusca`, `conectar`, `monitorarFrequencia`, `desconectar`.
 - [x] Nenhuma tela importa `react-native-ble-plx` nem menciona UUID ou base64 (busca na pasta `src/screens`: zero ocorrências).
 - [x] Um único ponto decide a implementação: `MODO_SIMULADO` em `bluetooth.js`, usado por `criarServicoBle()`.
-- [x] A decodificação está separada e é pura: `decodificarFrequencia()` em `src/services/frequenciaCardiaca.js`, com 6 testes (`npm test`).
+- [x] A decodificação está separada e é pura: `decodificarFrequencia()` em `src/services/frequenciaCardiaca.js`, com 6 testes (`npm test`; em Jest desde a Aula 14, em `src/services/frequenciaCardiaca.test.js`).
 - [x] No modo real, `discoverAllServicesAndCharacteristics()` é chamada logo após conectar.
 - [x] As permissões tratam `Platform.Version`: `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` da API 31 em diante, `ACCESS_FINE_LOCATION` antes.
 

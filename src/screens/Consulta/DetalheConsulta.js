@@ -86,8 +86,8 @@ export default function DetalheConsulta({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
-      <View style={styles.cartao}>
+    <SafeAreaView style={styles.tela} testID="tela-detalhe-consulta">
+      <View style={styles.cartao} testID="resumo-consulta">
         <Text style={styles.rotulo}>Quando</Text>
         <Text style={styles.valorGrande}>{formatarDataHora(consulta.dataHora)}</Text>
         <Text style={styles.detalhe}>Duração: {consulta.duracaoMinutos} min</Text>

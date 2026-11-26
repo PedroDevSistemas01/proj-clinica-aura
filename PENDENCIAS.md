@@ -1,4 +1,4 @@
-# Pendências do projeto (atualizado na Aula 13)
+# Pendências do projeto (atualizado na Aula 14)
 
 Lista única do que ficou em aberto até aqui. Cada item aponta onde está o detalhe.
 
@@ -36,10 +36,14 @@ Lista única do que ficou em aberto até aqui. Cada item aponta onde está o det
 - [x] ~~**Última verificação não fica guardada (Aula 10)**~~: resolvido na Aula 11. A tela de Sincronização abre com o último resultado gravado em disco. A tela de conflitos da Aula 10 continua sem ele.
 - [ ] **Biblioteca de background do SDK 51 (Aula 11):** usamos `expo-background-fetch` porque o `expo-background-task` só existe no SDK 53+. Ao subir de SDK: trocar a biblioteca, mudar `minimumInterval` de segundos para minutos e usar o gatilho de teste dela. Atenção: no SDK 53+ o push deixa de funcionar no Expo Go no Android.
 - [ ] **Sincronização baixa tudo (Aula 11):** `GET /consultas` inteiro a cada execução. Em rede móvel isso custa ao usuário; filtrar por período quando a API permitir.
-- [ ] **Abrir o app não sincroniza (Aula 13, P2):** a sincronização só dispara ao voltar do segundo plano, não na abertura a frio.
+- [x] ~~**Abrir o app não sincroniza (Aula 13, P2)**~~: corrigido na Aula 14, com teste (`useSincronizacao.test.js`).
 - [ ] **Sessão meio viva (Aula 13, P3):** sessões da API de autenticação ficam em memória; reiniciá-la deixa o token velho valendo no json-server e só o SMS devolve ao login.
 - [ ] **SMS de cancelamento com dados do app (Aula 13, P4):** como a consulta já foi apagada, o app manda `pacienteId` e `dataHora`; o número vem do cadastro. Com API real, o cancelamento deveria ser lógico (status) e o servidor enviaria sozinho.
 - [ ] **Status do SMS não volta para o app (Aula 13):** o app mostra "enfileirado"; consultar `GET /mensagens/:id` do gateway pela nossa API ficaria para uma próxima versão.
+- [ ] **Testing Library 13.3 no lugar da 14 (Aula 14):** a 14 exige React 19 (SDK 53+). Os testes já usam a forma assíncrona; ao subir de SDK, trocar o pacote e apagar os apelidos em `src/test-utils.js`.
+- [ ] **Avisos `act(...)` no console do `npm test` (Aula 14, B8):** não derrubam testes, mas poluem a saída.
+- [ ] **Periféricos chamados direto nas telas (Aula 14, B6 e B7):** `FotoPerfil` (expo-image-picker) e `LoginBiometrico` (expo-local-authentication) não têm service próprio; os testes mockam a biblioteca.
+- [ ] **Sem testes de servidor nem E2E (Aula 14):** `auth-api.js`, `gateway-sms.js` e `enviar-push.js` só foram conferidos com `curl`; não há Maestro/Detox.
 - [ ] **Antecedência fixa (Aula 8):** 1 hora para todos. Extensões não feitas: paciente escolher (1 hora / 1 dia) e segundo lembrete na véspera.
 - [ ] **Data digitada à mão (Aula 8):** o agendamento usa campos DD/MM/AAAA e HH:MM; um seletor de data nativo exigiria mais uma biblioteca.
 - [ ] **Biometria ativa para todos:** oferecer como opção nos ajustes do app (extensão da Aula 6).

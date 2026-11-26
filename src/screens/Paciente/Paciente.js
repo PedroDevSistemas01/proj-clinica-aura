@@ -88,8 +88,8 @@ export default function Paciente({ navigation }) {
 
   if (carregando) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
-        <ActivityIndicator size="large" color={cores.primaria} />
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-pacientes">
+        <ActivityIndicator size="large" color={cores.primaria} testID="carregando" />
         <Text style={styles.textoCarregando}>Carregando pacientes...</Text>
       </SafeAreaView>
     );
@@ -97,11 +97,11 @@ export default function Paciente({ navigation }) {
 
   if (erro) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-pacientes">
         <View style={styles.caixaErro}>
           <Text style={styles.tituloErro}>Falha na comunicação</Text>
-          <Text style={styles.mensagemErro}>{erro}</Text>
-          <TouchableOpacity style={styles.botaoPrimario} onPress={buscarPacientes}>
+          <Text style={styles.mensagemErro} testID="mensagem-erro">{erro}</Text>
+          <TouchableOpacity style={styles.botaoPrimario} onPress={buscarPacientes} testID="botao-tentar-novamente">
             <Text style={styles.botaoPrimarioTexto}>Tentar novamente</Text>
           </TouchableOpacity>
         </View>
@@ -110,7 +110,7 @@ export default function Paciente({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-pacientes">
       <View style={styles.barraTopo}>
         <Text style={styles.contador}>
           {pacientes.length} {pacientes.length === 1 ? 'paciente' : 'pacientes'}
@@ -124,6 +124,7 @@ export default function Paciente({ navigation }) {
       </View>
 
       <FlatList
+        testID="lista-pacientes"
         data={pacientes}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.conteudoLista}
@@ -133,7 +134,7 @@ export default function Paciente({ navigation }) {
           </Text>
         }
         renderItem={({ item }) => (
-          <View style={styles.cartao}>
+          <View style={styles.cartao} testID={`paciente-${item.id}`}>
             <Text style={styles.nome}>{item.nome}</Text>
             {!!item.cpf && <Text style={styles.detalhe}>CPF {item.cpf}</Text>}
             {!!item.dataNascimento && (

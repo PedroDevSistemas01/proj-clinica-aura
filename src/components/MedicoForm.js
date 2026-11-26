@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import { cores, espaco } from '../theme';
 import FotoPerfil from './FotoPerfil';
+import { validarMedico } from '../regras';
 
 const CAMPOS = [
   { chave: 'nome', rotulo: 'Nome completo', placeholder: 'Ana Beatriz Souza' },
@@ -67,8 +68,9 @@ export default function MedicoForm({ medico, onSave }) {
   }
 
   async function handleSubmit() {
-    if (!formData.nome.trim() || !formData.crm.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha ao menos o nome e o CRM.');
+    const problema = validarMedico(formData); // Aula 14: regra em src/regras.js
+    if (problema) {
+      Alert.alert('Campos obrigatórios', problema);
       return;
     }
 
@@ -109,6 +111,7 @@ export default function MedicoForm({ medico, onSave }) {
           <View key={campo.chave} style={styles.grupo}>
             <Text style={styles.rotulo}>{campo.rotulo}</Text>
             <TextInput
+              testID={`campo-${campo.chave}`}
               style={styles.campo}
               value={formData[campo.chave]}
               onChangeText={(valor) => atualizarCampo(campo.chave, valor)}
@@ -122,6 +125,7 @@ export default function MedicoForm({ medico, onSave }) {
         ))}
 
         <TouchableOpacity
+          testID="botao-salvar"
           style={[styles.botao, salvando && styles.botaoDesabilitado]}
           onPress={handleSubmit}
           disabled={salvando}

@@ -114,12 +114,12 @@ export default function ComoChegar() {
   const tempo = km !== null ? estimarTempo(km) : null;
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-como-chegar">
       <ScrollView contentContainerStyle={styles.conteudo}>
         {/* Sempre visível: recurso negado não pode virar tela vazia. */}
         <View style={styles.cartao}>
           <Text style={styles.rotulo}>Endereço da clínica</Text>
-          <Text style={styles.valor}>{enderecoTexto}</Text>
+          <Text style={styles.valor} testID="endereco-clinica">{enderecoTexto}</Text>
           <Text style={[styles.rotulo, styles.espacoAcima]}>Telefone</Text>
           <Text style={styles.valor}>{CLINICA.telefone}</Text>
           <TouchableOpacity style={styles.botaoSecundario} onPress={abrirNoAppDeMapas}>
@@ -147,7 +147,7 @@ export default function ComoChegar() {
               Para calcular a distância, o app usa a sua localização só enquanto esta tela está
               aberta. Ela não é gravada nem enviada à clínica.
             </Text>
-            <TouchableOpacity style={styles.botao} onPress={lerPosicao}>
+            <TouchableOpacity style={styles.botao} onPress={lerPosicao} testID="botao-localizar">
               <Text style={styles.botaoTexto}>Usar minha localização</Text>
             </TouchableOpacity>
           </>
@@ -166,11 +166,11 @@ export default function ComoChegar() {
       case FASE.NEGADA:
         return (
           <>
-            <Text style={styles.aviso}>
+            <Text style={styles.aviso} testID="mensagem-erro">
               Sem a sua localização não dá para calcular a distância. O endereço acima continua
               valendo para você chegar.
             </Text>
-            <TouchableOpacity style={styles.botao} onPress={lerPosicao}>
+            <TouchableOpacity style={styles.botao} onPress={lerPosicao} testID="botao-localizar">
               <Text style={styles.botaoTexto}>Permitir localização</Text>
             </TouchableOpacity>
           </>
@@ -180,11 +180,11 @@ export default function ComoChegar() {
         // Pedir de novo não faz nada: o sistema nem mostra a caixa.
         return (
           <>
-            <Text style={styles.aviso}>
+            <Text style={styles.aviso} testID="mensagem-erro">
               A localização está bloqueada para este app nos ajustes do aparelho. Se quiser ver a
               distância, libere por lá.
             </Text>
-            <TouchableOpacity style={styles.botao} onPress={() => Linking.openSettings()}>
+            <TouchableOpacity style={styles.botao} onPress={() => Linking.openSettings()} testID="botao-ajustes">
               <Text style={styles.botaoTexto}>Abrir os ajustes do aparelho</Text>
             </TouchableOpacity>
           </>
@@ -193,10 +193,10 @@ export default function ComoChegar() {
       case FASE.DESLIGADA:
         return (
           <>
-            <Text style={styles.aviso}>
+            <Text style={styles.aviso} testID="mensagem-erro">
               A localização do aparelho está desligada. Ligue-a e tente de novo.
             </Text>
-            <TouchableOpacity style={styles.botao} onPress={lerPosicao}>
+            <TouchableOpacity style={styles.botao} onPress={lerPosicao} testID="botao-localizar">
               <Text style={styles.botaoTexto}>Tentar novamente</Text>
             </TouchableOpacity>
           </>
@@ -205,8 +205,8 @@ export default function ComoChegar() {
       case FASE.ERRO:
         return (
           <>
-            <Text style={styles.aviso}>Não foi possível obter a sua posição agora.</Text>
-            <TouchableOpacity style={styles.botao} onPress={lerPosicao}>
+            <Text style={styles.aviso} testID="mensagem-erro">Não foi possível obter a sua posição agora.</Text>
+            <TouchableOpacity style={styles.botao} onPress={lerPosicao} testID="botao-localizar">
               <Text style={styles.botaoTexto}>Tentar novamente</Text>
             </TouchableOpacity>
           </>
@@ -216,7 +216,7 @@ export default function ComoChegar() {
       default:
         return (
           <>
-            <Text style={styles.distancia}>{formatarDistancia(km)}</Text>
+            <Text style={styles.distancia} testID="distancia">{formatarDistancia(km)}</Text>
             <Text style={styles.textoFraco}>em linha reta</Text>
 
             <View style={styles.tempos}>

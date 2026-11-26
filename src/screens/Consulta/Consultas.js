@@ -131,8 +131,8 @@ export default function Consultas({ navigation }) {
 
   if (carregando) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
-        <ActivityIndicator size="large" color={cores.primaria} />
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-consultas">
+        <ActivityIndicator size="large" color={cores.primaria} testID="carregando" />
         <Text style={styles.textoFraco}>Carregando consultas...</Text>
       </SafeAreaView>
     );
@@ -140,11 +140,11 @@ export default function Consultas({ navigation }) {
 
   if (erro) {
     return (
-      <SafeAreaView style={[styles.tela, styles.centralizado]}>
+      <SafeAreaView style={[styles.tela, styles.centralizado]} testID="tela-consultas">
         <View style={styles.caixaErro}>
           <Text style={styles.tituloErro}>Falha na comunicação</Text>
-          <Text style={styles.mensagemErro}>{erro}</Text>
-          <TouchableOpacity style={styles.botaoPrimario} onPress={buscarConsultas}>
+          <Text style={styles.mensagemErro} testID="mensagem-erro">{erro}</Text>
+          <TouchableOpacity style={styles.botaoPrimario} onPress={buscarConsultas} testID="botao-tentar-novamente">
             <Text style={styles.botaoPrimarioTexto}>Tentar novamente</Text>
           </TouchableOpacity>
         </View>
@@ -153,12 +153,13 @@ export default function Consultas({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.tela}>
+    <SafeAreaView style={styles.tela} testID="tela-consultas">
       <View style={styles.barraTopo}>
-        <TouchableOpacity onPress={mostrarLembretesPendentes}>
+        <TouchableOpacity onPress={mostrarLembretesPendentes} testID="botao-lembretes-pendentes">
           <Text style={styles.link}>Lembretes pendentes</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          testID="botao-agendar"
           style={styles.botaoNovo}
           onPress={() => navigation.navigate('AgendarConsulta')}
         >
@@ -167,6 +168,7 @@ export default function Consultas({ navigation }) {
       </View>
 
       <FlatList
+        testID="lista-consultas"
         data={consultas}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.conteudoLista}
@@ -177,6 +179,7 @@ export default function Consultas({ navigation }) {
         }
         renderItem={({ item }) => (
           <TouchableOpacity
+            testID={`consulta-${item.id}`}
             style={styles.cartao}
             onPress={() => navigation.navigate('DetalheConsulta', { consultaId: String(item.id) })}
           >
@@ -190,12 +193,17 @@ export default function Consultas({ navigation }) {
 
             <View style={styles.acoes}>
               <TouchableOpacity
+                testID={`botao-remarcar-${item.id}`}
                 style={styles.botaoSecundario}
                 onPress={() => navigation.navigate('AgendarConsulta', { consulta: item })}
               >
                 <Text style={styles.botaoSecundarioTexto}>Remarcar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.botaoPerigo} onPress={() => confirmarCancelamento(item)}>
+              <TouchableOpacity
+                testID={`botao-cancelar-${item.id}`}
+                style={styles.botaoPerigo}
+                onPress={() => confirmarCancelamento(item)}
+              >
                 <Text style={styles.botaoPerigoTexto}>Cancelar</Text>
               </TouchableOpacity>
             </View>
